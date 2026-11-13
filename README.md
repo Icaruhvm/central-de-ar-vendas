@@ -1,6 +1,3 @@
-# central-de-ar-vendas
-Sistema de gestão comercial para uma empresa de climatização. Cobre clientes, vendedores, regiões, produtos e pedidos, com validação de CNPJ e CPF, comissão por venda e relatórios gerenciais. API em Node.js e banco em MongoDB.
-
 # Central de Ar — Gestão de Vendas
 
 Sistema comercial para controlar o ciclo de venda de uma empresa de climatização: cadastro de clientes e vendedores, regiões de atendimento, catálogo de produtos, pedidos e comissões.
