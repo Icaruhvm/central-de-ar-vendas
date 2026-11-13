@@ -1,0 +1,16 @@
+{
+  "name": "central-de-ar-vendas",
+  "version": "1.0.0",
+  "description": "Sistema de gestão comercial para uma empresa de climatização.",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node scripts/popular-banco.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  }
+}

@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e2a4a">
+<title>Central de Ar · Vendas</title>
+<style>
+:root {
+  --bg: #e8eef6;
+  --paper: #ffffff;
+  --ink: #0f2744;
+  --muted: #52657c;
+  --line: #d7e2ee;
+  --navy: #0e2a4a;
+  --navy-2: #163860;
+  --blue: #1d6fe8;
+  --blue-2: #1558c0;
+  --danger: #c2413a;
+  --danger-soft: #fdecea;
+  --ok: #0f8a5f;
+  --sans: "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; min-height: 100%; }
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  background:
+    radial-gradient(900px 280px at 50% -40px, rgba(29, 111, 232, 0.16), transparent 70%),
+    var(--bg);
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.nav svg, .btn svg, .icon-btn svg, .search svg {
+  width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.app { display: flex; flex-direction: column; min-height: 100vh; }
+.mast {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 64px; padding: 0 22px;
+  background: linear-gradient(90deg, #0c2340 0%, #14345c 70%, #1a4a86 100%);
+  color: #e8f1fb;
+  box-shadow: 0 8px 24px rgba(12, 35, 64, 0.22);
+}
+.brand { display: flex; gap: 12px; align-items: center; }
+.mark {
+  width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(160deg, #5aa2ff, #1d6fe8);
+  color: white; font-size: 12px; font-weight: 800; letter-spacing: -0.03em;
+  box-shadow: 0 6px 16px rgba(29, 111, 232, 0.4);
+}
+.brand h1 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+.brand p { margin: 1px 0 0; font-size: 12px; color: #b7cceb; }
+.menubar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  border-bottom: 1px solid var(--line);
+  padding: 8px 16px;
+  position: sticky; top: 0; z-index: 15;
+  backdrop-filter: blur(10px);
+}
+.nav { display: flex; flex-direction: row; align-items: center; gap: 4px; overflow: auto; flex: 1; }
+.nav button {
+  display: flex; align-items: center; gap: 7px;
+  background: transparent; color: #3d5270;
+  border: 0; border-radius: 999px; padding: 8px 12px; white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease;
+}
+.nav svg { display: inline; }
+.nav button:hover { background: #e7f0fb; color: var(--navy); }
+.nav button .count { font-size: 11px; color: #6d82a0; background: #eef3f9; border-radius: 999px; padding: 1px 6px; }
+.nav button.active { background: #0e2a4a; color: #fff; font-weight: 650; box-shadow: 0 6px 16px rgba(14, 42, 74, 0.22); }
+.nav button.active .count { background: rgba(255,255,255,0.16); color: #d6e6ff; }
+.nav button.active svg { color: #8ec0ff; }
+.side-note { margin: 0; font-size: 12px; color: var(--muted); max-width: 280px; line-height: 1.35; }
+.status-dot { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #d5e6f8; }
+.status-dot i { width: 8px; height: 8px; border-radius: 50%; background: #3dde9a; box-shadow: 0 0 0 4px rgba(61, 222, 154, 0.18); display: block; }
+.main { flex: 1; min-width: 0; padding: 18px 22px 36px; }
+.top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: nowrap;
+  margin-bottom: 14px;
+}
+.eyebrow { display: none; }
+.top > div:first-child { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.top h2 { margin: 0; font-size: 26px; font-weight: 720; letter-spacing: -0.035em; color: #0e2a4a; }
+.top-actions { display: flex; align-items: center; gap: 12px; flex-wrap: nowrap; }
+.search { position: relative; display: flex; align-items: center; }
+.search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #7b90aa; pointer-events: none; }
+.search input, .dates input, .field input, .field select, .field textarea {
+  background: #fff; border: 1px solid #d3dfec; border-radius: 12px; height: 40px; padding: 0 12px; width: 100%;
+  box-shadow: 0 1px 2px rgba(14, 42, 74, 0.04);
+}
+.search input { width: 230px; padding-left: 34px; }
+.dates { display: flex; align-items: center; gap: 12px; }
+.dates label {
+  display: inline-flex; flex-direction: row; align-items: center; gap: 8px; margin: 0; height: 40px;
+  font-size: 12px; font-weight: 700; color: #5c7290; white-space: nowrap;
+}
+.dates input { width: 150px; }
+.field input:focus, .field select:focus, .field textarea:focus, .search input:focus, .dates input:focus {
+  border-color: #1d6fe8; box-shadow: 0 0 0 4px rgba(29, 111, 232, 0.14); outline: none;
+}
+.field input, .field select, .field textarea { height: auto; padding: 10px 12px; }
+.field input.bad, .field select.bad { border-color: var(--danger); background: #fff8f7; }
+.field input.good { border-color: var(--ok); }
+.btn {
+  border: 0; border-radius: 12px; padding: 0 16px; height: 40px;
+  background: linear-gradient(180deg, #2b7cf0, #1d6fe8);
+  color: #fff; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(29, 111, 232, 0.28);
+  transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn:hover { filter: brightness(1.05); box-shadow: 0 10px 22px rgba(29, 111, 232, 0.34); }
+.btn.ghost {
+  background: #fff; color: #1d4f91; border: 1px solid #d3e2f5;
+  box-shadow: none; border-radius: 999px; height: 32px; padding: 0 12px; font-weight: 650;
+}
+.btn.ghost:hover { background: #eef5ff; border-color: #b9d3f5; }
+.btn.danger { background: var(--danger); color: #fff; box-shadow: none; border-radius: 12px; height: 40px; }
+.btn.small { font-size: 12px; }
+.icon-btn {
+  width: 32px; height: 32px; padding: 0; border-radius: 999px;
+  border: 1px solid #d3e2f5; background: #fff; color: #5c7290;
+  display: inline-grid; place-items: center;
+  transition: background-color .15s ease, color .15s ease, border-color .15s ease;
+}
+.icon-btn:hover { background: #eef5ff; color: var(--navy); }
+.icon-btn.danger:hover { color: var(--danger); background: var(--danger-soft); border-color: #f3c7c3; }
+.menu-btn { display: none; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
+.kpi, .panel {
+  background: var(--paper);
+  border: 1px solid rgba(211, 223, 236, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 10px 28px rgba(14, 42, 74, 0.06);
+}
+.kpi { padding: 14px 16px 16px; }
+.kpi em { display: block; font-style: normal; color: #6d84a3; font-size: 11px; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+.kpi strong { display: block; margin-top: 6px; font-size: 26px; font-weight: 720; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; color: #0e2a4a; }
+.kpi span { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.panel { padding: 4px 4px 8px; margin-bottom: 12px; overflow: hidden; }
+.panel header, .panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 14px 16px 8px; }
+.panel h3 { margin: 0; font-size: 15px; font-weight: 720; letter-spacing: -0.02em; }
+.panel p.help, .help { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; font-size: 11px; font-weight: 750; color: #6d84a3;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 8px 14px; border-bottom: 1px solid var(--line); background: #f7faff;
+}
+td { padding: 9px 14px; border-bottom: 1px solid #eef3f8; vertical-align: middle; font-variant-numeric: tabular-nums; transition: background-color .15s ease; }
+tbody tr:hover td { background: #f4f8fd; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; }
+.who { font-weight: 700; }
+.sub { display: block; color: #3e5674; font-size: 12px; font-weight: 500; margin-top: 2px; line-height: 1.35; }
+.tag { display: inline-block; background: #e7f1ff; color: #1d4f91; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+.actions { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+.empty { padding: 28px 16px; text-align: center; color: var(--muted); }
+.empty strong { display: block; color: var(--ink); margin-bottom: 4px; }
+.detail td { background: #f7faff; font-size: 13px; color: #3e5674; }
+.modal { position: fixed; inset: 0; background: rgba(12, 35, 64, 0.48); display: grid; place-items: center; padding: 18px; z-index: 40; }
+.dialog {
+  width: min(840px, 100%); max-height: min(92vh, 880px); overflow: auto;
+  background: #fff; border-radius: 18px; border: 1px solid #e3edf7;
+  box-shadow: 0 24px 60px rgba(12, 35, 64, 0.22); padding: 20px 22px;
+}
+.dialog.wide { width: min(960px, 100%); }
+.dialog.sm { width: min(460px, 100%); }
+.dialog > header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 8px; }
+.dialog h2, .dialog h3 { font-weight: 720; margin: 0; font-size: 20px; letter-spacing: -0.03em; color: #0e2a4a; }
+fieldset { border: 1px solid var(--line); border-radius: 14px; margin: 12px 0; padding: 14px; background: #f8fbff; }
+legend { padding: 0 6px; font-size: 13px; font-weight: 750; color: #0e2a4a; }
+.grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.s2 { grid-column: span 2; } .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s5 { grid-column: span 5; } .s6 { grid-column: span 6; } .s1 { grid-column: span 1; }
+.label-row { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; margin-bottom: 6px; }
+.field label { font-size: 13px; font-weight: 700; }
+.field label i { color: var(--danger); font-style: normal; }
+.counter { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.msg { display: block; min-height: 16px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.msg.bad { color: var(--danger); }
+.msg.good { color: var(--ok); }
+.money { display: flex; align-items: center; border: 1px solid #d3dfec; border-radius: 12px; background: #fff; overflow: hidden; }
+.money span { padding: 0 10px; color: var(--muted); font-size: 13px; }
+.money input { border: 0; border-radius: 0; height: auto; box-shadow: none; }
+.form-error { background: var(--danger-soft); color: var(--danger); border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+.dialog-actions { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-top: 8px; }
+.total-box { font-size: 12px; color: var(--muted); }
+.total-box strong { display: block; color: #0e2a4a; font-size: 24px; letter-spacing: -0.03em; }
+.item-row { display: grid; grid-template-columns: 1.6fr 90px 130px 110px 32px; gap: 8px; margin-bottom: 8px; align-items: center; }
+.item-row input, .item-row select { width: 100%; background: #fff; border: 1px solid #d3dfec; border-radius: 12px; padding: 8px 10px; height: 40px; }
+.line-total { text-align: right; font-weight: 700; }
+.backdrop { position: fixed; inset: 0; background: rgba(12, 35, 64, 0.4); z-index: 20; }
+#toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 60; }
+.toast { background: #0e2a4a; color: white; padding: 12px 14px; border-radius: 12px; max-width: 340px; box-shadow: 0 12px 28px rgba(14, 42, 74, 0.28); }
+.toast.bad { background: var(--danger); }
+.offline { max-width: 520px; margin: 12vh auto; background: #fff; padding: 22px; border: 1px solid var(--line); border-radius: 16px; }
+.offline h2 { font-weight: 720; }
+code { font-family: Consolas, monospace; font-size: .95em; }
+@media (max-width: 1100px) { .kpis, .grid-2 { grid-template-columns: 1fr 1fr; } .side-note { display: none; } }
+@media (max-width: 860px) {
+  .menu-btn { display: inline-grid; }
+  .menubar { padding: 8px; }
+  .nav { display: none; position: static; width: 100%; flex-direction: column; align-items: stretch; background: #fff; }
+  body.nav-open .nav { display: flex; }
+  .main { padding: 14px; }
+  .top, .top-actions, .dates { flex-wrap: wrap; }
+  .top-actions, .dates, .search, .search input, .dates input { width: 100%; }
+  .kpis, .grid-2, .grid { grid-template-columns: 1fr; }
+  .s1, .s2, .s3, .s4, .s5, .s6 { grid-column: auto; }
+  .item-row { grid-template-columns: 1fr 1fr; }
+  table.resp thead { display: none; }
+  table.resp tr { display: block; border: 1px solid var(--line); border-radius: 12px; margin: 8px; background: white; }
+  table.resp td { display: flex; justify-content: space-between; gap: 12px; border: 0; }
+  table.resp td::before { content: attr(data-label); color: var(--muted); font-size: 11px; }
+  table.resp td.actions { justify-content: flex-end; }
+  table.resp td.actions::before { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+</style>
+</head>
+<body>
+<div class="backdrop" data-action="close-nav" hidden></div>
+<div class="app">
+  <header class="mast">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">CA</div>
+      <div><h1>Central de Ar</h1><p>Vendas</p></div>
+    </div>
+    <div class="status-dot"><i></i> Conectado ao banco</div>
+  </header>
+  <div class="menubar">
+    <nav class="nav" id="nav"></nav>
+  </div>
+  <div class="main">
+    <header class="top">
+      <div>
+        <button class="icon-btn menu-btn" type="button" data-action="open-nav" aria-label="Abrir menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+        <p class="eyebrow" id="eyebrow"></p>
+        <h2 id="pageTitle"></h2>
+      </div>
+      <div class="top-actions">
+        <div class="search" id="searchWrap"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M16 16l4 4"/></svg><input id="search" type="search" placeholder="Buscar" aria-label="Buscar na tela"></div>
+        <div class="dates" id="dateWrap">
+          <label>De <input id="dateStart" type="date"></label>
+          <label>Até <input id="dateEnd" type="date"></label>
+        </div>
+        <div id="pageAction"></div>
+      </div>
+    </header>
+    <div id="view"></div>
+  </div>
+</div>
+<div id="modal" class="modal" hidden>
+  <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <header>
+      <div><p class="eyebrow" id="modalEyebrow"></p><h2 id="modalTitle"></h2></div>
+      <button class="icon-btn" type="button" data-action="close-modal" aria-label="Fechar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+    <form id="modalForm" novalidate></form>
+  </div>
+</div>
+<div id="confirm" class="modal" hidden>
+  <div class="dialog sm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 id="confirmTitle"></h3>
+    <p id="confirmText"></p>
+    <div class="dialog-actions">
+      <button class="btn ghost" type="button" data-action="confirm-no">Cancelar</button>
+      <button class="btn danger" type="button" data-action="confirm-yes">Apagar</button>
+    </div>
+  </div>
+</div>
+<div id="toasts" aria-live="polite"></div>
+<script>
+const API = (location.protocol === 'file:' || (location.port && location.port !== '3000'))
+  ? 'http://localhost:3000/api'
+  : location.origin + '/api';
+
+const UFS = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
+const DDDS = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
+const state = {
+  tab: 'dashboard',
+  search: '',
+  dateStart: '',
+  dateEnd: '',
+  regiaoRelatorio: '',
+  pedidoAberto: '',
+  editing: null,
+  saving: false,
+  confirm: null,
+  enderecos: [], regioes: [], vendedores: [], clientes: [], produtos: [], pedidos: []
+};
+
+const PAGES = {
+  dashboard: { eyebrow: 'Visão geral', title: 'Painel', action: 'Novo pedido', entity: 'pedidos' },
+  pedidos: { eyebrow: 'Vendas', title: 'Pedidos', action: 'Novo pedido', entity: 'pedidos' },
+  clientes: { eyebrow: 'Cadastros', title: 'Empresas', action: 'Nova empresa', entity: 'clientes' },
+  vendedores: { eyebrow: 'Equipe', title: 'Vendedores', action: 'Novo vendedor', entity: 'vendedores' },
+  produtos: { eyebrow: 'Catálogo', title: 'Produtos', action: 'Novo produto', entity: 'produtos' },
+  regioes: { eyebrow: 'Território', title: 'Regiões', action: 'Nova região', entity: 'regioes' },
+  enderecos: { eyebrow: 'Locais', title: 'Endereços', action: 'Novo endereço', entity: 'enderecos' }
+};
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function attr(value) { return esc(value); }
+function digits(value) { return String(value ?? '').replace(/\D/g, ''); }
+function hoje() {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+function dayKey(value) {
+  const match = String(value ?? '').match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+}
+function formatDay(value) {
+  const key = dayKey(value);
+  if (!key) return '\u2014';
+  const [ano, mes, dia] = key.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+function formatBRL(value) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0);
+}
+function formatPercent(value) {
+  return new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 }).format(Number(value) || 0) + '%';
+}
+function norm(value) {
+  return String(value ?? '').normalize('NFD').replace(/\p{M}/gu, '').trim().toLowerCase();
+}
+function digito(base, pesos) {
+  const soma = pesos.reduce((total, peso, i) => total + Number(base[i]) * peso, 0);
+  const resto = soma % 11;
+  return resto < 2 ? 0 : 11 - resto;
+}
+function cnpjValido(value) {
+  const d = digits(value);
+  if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+  const d1 = digito(d, [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const d2 = digito(d, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return d1 === Number(d[12]) && d2 === Number(d[13]);
+}
+function cpfValido(value) {
+  const d = digits(value);
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const d1 = digito(d, [10, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const d2 = digito(d, [11, 10, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return d1 === Number(d[9]) && d2 === Number(d[10]);
+}
+function maskCNPJ(value) {
+  const d = digits(value).slice(0, 14);
+  let out = d.slice(0, 2);
+  if (d.length > 2) out += '.' + d.slice(2, 5);
+  if (d.length > 5) out += '.' + d.slice(5, 8);
+  if (d.length > 8) out += '/' + d.slice(8, 12);
+  if (d.length > 12) out += '-' + d.slice(12, 14);
+  return out;
+}
+function maskCPF(value) {
+  const d = digits(value).slice(0, 11);
+  let out = d.slice(0, 3);
+  if (d.length > 3) out += '.' + d.slice(3, 6);
+  if (d.length > 6) out += '.' + d.slice(6, 9);
+  if (d.length > 9) out += '-' + d.slice(9, 11);
+  return out;
+}
+function maskPhone(value) {
+  const d = digits(value).slice(0, 11);
+  if (!d) return '';
+  if (d.length < 3) return '(' + d;
+  if (d.length < 8) return `(${d.slice(0, 2)}) ${d.slice(2)}`;
+  return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+}
+function maskCEP(value) {
+  const d = digits(value).slice(0, 8);
+  if (d.length <= 5) return d;
+  return d.slice(0, 5) + '-' + d.slice(5);
+}
+function telefoneCompleto(value) {
+  return /^\(\d{2}\) 9\d{4}-\d{4}$/.test(value) && DDDS.has(value.slice(1, 3));
+}
+function emailValido(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value) && value.length <= 100;
+}
+function nomeValido(value) {
+  const nome = value.trim().replace(/\s+/g, ' ');
+  return nome.length >= 2 && nome.length <= 100 && /\p{L}/u.test(nome);
+}
+function mesmoId(a, b) {
+  if (a == null || b == null) return false;
+  const esquerda = String(a);
+  const direita = String(b);
+  if (!esquerda || !direita || esquerda === 'undefined' || direita === 'undefined') return false;
+  return esquerda === direita;
+}
+function byId(lista, campo, id) {
+  return lista.find((item) => mesmoId(item[campo], id));
+}
+function pedidoTotal(pedido) {
+  return (pedido.itens || []).reduce((soma, item) => soma + Number(item.quantidade) * Number(item.preco_unitario), 0);
+}
+function pedidosFiltrados() {
+  return state.pedidos.filter((pedido) => {
+    const dia = dayKey(pedido.data_pedido);
+    if (state.dateStart && dia < state.dateStart) return false;
+    if (state.dateEnd && dia > state.dateEnd) return false;
+    return true;
+  });
+}
+function usoEndereco(id) {
+  const nomes = [];
+  state.clientes.filter((c) => mesmoId(c.id_endereco, id)).forEach((c) => nomes.push(c.nome));
+  state.vendedores.filter((v) => mesmoId(v.id_endereco, id)).forEach((v) => nomes.push(v.nome));
+  return nomes;
+}
+function enderecoTexto(endereco) {
+  if (!endereco) return 'Sem endereço';
+  const comp = endereco.complemento ? `, ${endereco.complemento}` : '';
+  return `${endereco.logradouro}, ${endereco.numero}${comp} · ${endereco.bairro} · ${endereco.cidade}/${endereco.estado} · ${endereco.cep}`;
+}
+
+function toast(message, type) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (type === 'bad' ? ' bad' : '');
+  el.textContent = message;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 5200);
+}
+
+async function api(path, method, body) {
+  let res;
+  try {
+    res = await fetch(API + path, {
+      method: method || 'GET',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: body ? JSON.stringify(body) : undefined
+    });
+  } catch {
+    throw new Error('Não consegui falar com o servidor. Confira se o backend está ligado.');
+  }
+  const text = await res.text();
+  let data = {};
+  if (text) {
+    try { data = JSON.parse(text); } catch { throw new Error('O servidor respondeu de um jeito inesperado.'); }
+  }
+  if (!res.ok) throw new Error(data.erro || 'Não foi possível concluir.');
+  return data;
+}
+
+async function reload() {
+  const [enderecos, regioes, vendedores, clientes, produtos, pedidos] = await Promise.all([
+    api('/enderecos'), api('/regioes'), api('/vendedores'), api('/clientes'), api('/produtos'), api('/pedidos')
+  ]);
+  Object.assign(state, { enderecos, regioes, vendedores, clientes, produtos, pedidos });
+  if (!state.regiaoRelatorio && regioes[0]) {
+    const comEmpresa = regioes.find((regiao) => clientes.some((cliente) => cliente.endereco && norm(cliente.endereco.cidade) === norm(regiao.nome_regiao)));
+    state.regiaoRelatorio = (comEmpresa || regioes[0]).id_regiao;
+  }
+}
+
+function renderNav() {
+  const icones = {
+    dashboard: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>',
+    pedidos: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 12H7L6 7z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>',
+    clientes: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V7l8-3 8 3v13"/><path d="M9 20v-5h6v5"/><path d="M9 10h.01M15 10h.01M9 14h.01M15 14h.01"/></svg>',
+    vendedores: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3"/><path d="M5 19c1.4-3 3.6-4.5 7-4.5s5.6 1.5 7 4.5"/></svg>',
+    produtos: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l9-4 9 4-9 4-9-4z"/><path d="M3 8v8l9 4 9-4V8"/><path d="M12 12v8"/></svg>',
+    regioes: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z"/></svg>',
+    enderecos: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21V9"/><path d="M8 6l4-3 4 3v4H8z"/></svg>'
+  };
+  const itens = [
+    ['dashboard', 'Painel', ''],
+    ['pedidos', 'Pedidos', state.pedidos.length],
+    ['clientes', 'Empresas', state.clientes.length],
+    ['vendedores', 'Vendedores', state.vendedores.length],
+    ['produtos', 'Produtos', state.produtos.length],
+    ['regioes', 'Regiões', state.regioes.length],
+    ['enderecos', 'Endereços', state.enderecos.length]
+  ];
+  document.getElementById('nav').innerHTML = itens.map(([id, nome, count]) => `
+    <button type="button" class="${state.tab === id ? 'active' : ''}" data-action="nav" data-tab="${id}">
+      ${icones[id]}
+      <span class="name">${nome}</span>
+      ${count === '' ? '' : `<span class="count">${count}</span>`}
+    </button>`).join('');
+}
+
+function render() {
+  const page = PAGES[state.tab];
+  document.getElementById('eyebrow').textContent = page.eyebrow;
+  document.getElementById('pageTitle').textContent = page.title;
+  document.getElementById('pageAction').innerHTML = `<button class="btn" type="button" data-action="open-form" data-entity="${page.entity}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>${page.action}</button>`;
+  document.getElementById('dateWrap').hidden = !(state.tab === 'dashboard' || state.tab === 'pedidos');
+  document.getElementById('search').placeholder = state.tab === 'dashboard' ? 'Buscar nos relatórios' : 'Buscar nesta lista';
+  const views = { dashboard: renderDashboard, pedidos: renderPedidos, clientes: renderClientes, vendedores: renderVendedores, produtos: renderProdutos, regioes: renderRegioes, enderecos: renderEnderecos };
+  document.getElementById('view').innerHTML = views[state.tab]() + '<p class="empty" id="searchEmpty" hidden><strong>Nada encontrado</strong>Tente outro termo.</p>';
+  renderNav();
+  applySearch();
+}
+
+function table(headers, rows, emptyTitle, emptyText) {
+  if (!rows.length) return `<div class="empty"><strong>${esc(emptyTitle)}</strong>${esc(emptyText)}</div>`;
+  return `<table class="resp"><thead><tr>${headers.map((h) => `<th class="${h.num ? 'num' : ''}">${esc(h.label)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+}
+function cells(valores) {
+  return valores.map((valor) => `<td class="${valor.num ? 'num' : ''} ${valor.cls || ''}" data-label="${attr(valor.label)}">${valor.html}</td>`).join('');
+}
+
+function renderDashboard() {
+  const pedidos = pedidosFiltrados();
+  const faturamento = pedidos.reduce((soma, pedido) => soma + pedidoTotal(pedido), 0);
+  const comissao = pedidos.reduce((soma, pedido) => soma + pedidoTotal(pedido) * (Number(pedido.perc_comissao) || 0) / 100, 0);
+  const porRegiao = state.regioes.map((regiao) => {
+    const vendedor = state.vendedores.find((v) => mesmoId(v.id_regiao, regiao.id_regiao));
+    let total = 0;
+    if (vendedor) pedidos.filter((p) => String(p.id_vendedor) === String(vendedor.id_vendedor)).forEach((p) => { total += pedidoTotal(p); });
+    return { regiao, vendedor, total };
+  }).sort((a, b) => b.total - a.total);
+  const porCliente = state.clientes.map((cliente) => {
+    const lista = pedidos.filter((p) => String(p.id_cliente) === String(cliente.id_cliente));
+    return { cliente, qtd: lista.length, total: lista.reduce((s, p) => s + pedidoTotal(p), 0) };
+  }).sort((a, b) => b.total - a.total);
+  const porVendedor = state.vendedores.map((vendedor) => {
+    const lista = pedidos.filter((p) => String(p.id_vendedor) === String(vendedor.id_vendedor));
+    const total = lista.reduce((s, p) => s + pedidoTotal(p), 0);
+    const com = lista.reduce((s, p) => s + pedidoTotal(p) * (Number(p.perc_comissao) || 0) / 100, 0);
+    return { vendedor, total, com };
+  }).sort((a, b) => b.total - a.total);
+  const porProduto = state.produtos.map((produto) => {
+    let qtd = 0; let total = 0;
+    pedidos.forEach((p) => (p.itens || []).filter((i) => String(i.id_produto) === String(produto.id_produto)).forEach((i) => {
+      qtd += Number(i.quantidade); total += Number(i.quantidade) * Number(i.preco_unitario);
+    }));
+    return { produto, qtd, total };
+  }).sort((a, b) => b.total - a.total);
+  const extrato = [];
+  state.vendedores.forEach((vendedor) => {
+    state.produtos.forEach((produto) => {
+      let qtd = 0; let com = 0;
+      pedidos.filter((p) => String(p.id_vendedor) === String(vendedor.id_vendedor)).forEach((p) => {
+        (p.itens || []).filter((i) => String(i.id_produto) === String(produto.id_produto)).forEach((i) => {
+          qtd += Number(i.quantidade);
+          com += Number(i.quantidade) * Number(i.preco_unitario) * (Number(p.perc_comissao) || 0) / 100;
+        });
+      });
+      if (qtd) extrato.push({ vendedor, produto, qtd, com });
+    });
+  });
+  const regiao = byId(state.regioes, 'id_regiao', state.regiaoRelatorio) || state.regioes[0];
+  const empresasRegiao = state.clientes.filter((c) => c.endereco && regiao && norm(c.endereco.cidade) === norm(regiao.nome_regiao));
+  const opcoes = state.regioes.map((r) => `<option value="${attr(r.id_regiao)}"${String(r.id_regiao) === String(state.regiaoRelatorio) ? ' selected' : ''}>${esc(r.nome_regiao)}</option>`).join('');
+
+  return `
+    <section class="kpis">
+      <article class="kpi"><em>Faturamento</em><strong>${formatBRL(faturamento)}</strong><span>no período escolhido</span></article>
+      <article class="kpi"><em>Pedidos</em><strong>${pedidos.length}</strong><span>vendas registradas</span></article>
+      <article class="kpi"><em>Comissões</em><strong>${formatBRL(comissao)}</strong><span>calculadas em cada pedido</span></article>
+      <article class="kpi"><em>Empresas</em><strong>${state.clientes.length}</strong><span>${state.vendedores.length === 1 ? '1 vendedor ativo' : state.vendedores.length + ' vendedores ativos'}</span></article>
+    </section>
+    <div class="grid-2">
+      <section class="panel"><div class="panel-head"><div><h3>Total por região</h3><p class="help">A venda entra na região do vendedor.</p></div></div>
+        ${table([{ label: 'Região' }, { label: 'Total', num: true }], porRegiao.map((item) => `<tr data-filter="${attr(item.regiao.nome_regiao + ' ' + (item.vendedor ? item.vendedor.nome : ''))}">${cells([
+          { label: 'Região', html: `${esc(item.regiao.nome_regiao)}<span class="sub">${item.vendedor ? esc(item.vendedor.nome) : 'Sem vendedor'}</span>` },
+          { label: 'Total', num: true, html: formatBRL(item.total) }
+        ])}</tr>`), 'Sem regiões', 'Cadastre uma região para começar.')}
+      </section>
+      <section class="panel"><div class="panel-head"><div><h3>Total por empresa</h3></div></div>
+        ${table([{ label: 'Empresa' }, { label: 'Pedidos', num: true }, { label: 'Total', num: true }], porCliente.map((item) => `<tr data-filter="${attr(item.cliente.nome)}">${cells([
+          { label: 'Empresa', html: esc(item.cliente.nome) },
+          { label: 'Pedidos', num: true, html: String(item.qtd) },
+          { label: 'Total', num: true, html: formatBRL(item.total) }
+        ])}</tr>`), 'Sem empresas', 'O total aparece quando houver cadastro.')}
+      </section>
+      <section class="panel"><div class="panel-head"><div><h3>Total por vendedor</h3></div></div>
+        ${table([{ label: 'Vendedor' }, { label: 'Vendas', num: true }, { label: 'Comissão', num: true }], porVendedor.map((item) => `<tr data-filter="${attr(item.vendedor.nome)}">${cells([
+          { label: 'Vendedor', html: `${esc(item.vendedor.nome)}<span class="sub">${esc(item.vendedor.regiao ? item.vendedor.regiao.nome_regiao : '')}</span>` },
+          { label: 'Vendas', num: true, html: formatBRL(item.total) },
+          { label: 'Comissão', num: true, html: formatBRL(item.com) }
+        ])}</tr>`), 'Sem vendedores', 'Cadastre quem atende as regiões.')}
+      </section>
+      <section class="panel"><div class="panel-head"><div><h3>Total por produto</h3></div></div>
+        ${table([{ label: 'Produto' }, { label: 'Qtd', num: true }, { label: 'Total', num: true }], porProduto.map((item) => `<tr data-filter="${attr(item.produto.nome)}">${cells([
+          { label: 'Produto', html: esc(item.produto.nome) },
+          { label: 'Qtd', num: true, html: String(item.qtd) },
+          { label: 'Total', num: true, html: formatBRL(item.total) }
+        ])}</tr>`), 'Sem produtos', 'Cadastre o catálogo para vender.')}
+      </section>
+    </div>
+    <section class="panel"><div class="panel-head"><div><h3>Empresas por região</h3><p class="help">Cruza o nome da região com a cidade do endereço.</p></div>
+      <select id="regiaoRelatorio" aria-label="Região do relatório">${opcoes}</select></div>
+      ${table([{ label: 'Empresa' }, { label: 'CNPJ' }, { label: 'Celular' }], empresasRegiao.map((c) => `<tr data-filter="${attr(c.nome + ' ' + c.cnpj)}">${cells([
+        { label: 'Empresa', html: esc(c.nome) },
+        { label: 'CNPJ', html: esc(c.cnpj) },
+        { label: 'Celular', html: esc(c.telefone) }
+      ])}</tr>`), 'Nenhuma empresa nesta cidade', 'O endereço da empresa precisa estar na cidade da região.')}
+    </section>
+    <section class="panel"><div class="panel-head"><div><h3>Extrato de comissão</h3><p class="help">A comissão fica gravada no pedido, não no vendedor.</p></div></div>
+      ${table([{ label: 'Vendedor' }, { label: 'Produto' }, { label: 'Qtd', num: true }, { label: 'Comissão', num: true }], extrato.map((item) => `<tr data-filter="${attr(item.vendedor.nome + ' ' + item.produto.nome)}">${cells([
+        { label: 'Vendedor', html: esc(item.vendedor.nome) },
+        { label: 'Produto', html: esc(item.produto.nome) },
+        { label: 'Qtd', num: true, html: String(item.qtd) },
+        { label: 'Comissão', num: true, html: formatBRL(item.com) }
+      ])}</tr>`), 'Nenhuma comissão no período', 'Registre um pedido para ver o extrato.')}
+    </section>`;
+}
+
+function renderPedidos() {
+  const rows = [];
+  pedidosFiltrados().forEach((pedido) => {
+    const cliente = byId(state.clientes, 'id_cliente', pedido.id_cliente);
+    const vendedor = byId(state.vendedores, 'id_vendedor', pedido.id_vendedor);
+    const aberto = state.pedidoAberto === pedido.id_pedido;
+    const filtro = [pedido.id_pedido, cliente && cliente.nome, vendedor && vendedor.nome, formatDay(pedido.data_pedido)].join(' ');
+    rows.push(`<tr data-filter="${attr(filtro)}">${cells([
+      { label: 'Pedido', html: `<span class="who">#${esc(String(pedido.id_pedido).slice(-6).toUpperCase())}</span><span class="sub">${formatDay(pedido.data_pedido)}</span>` },
+      { label: 'Empresa', html: esc(cliente ? cliente.nome : 'Empresa removida') },
+      { label: 'Vendedor', html: esc(vendedor ? vendedor.nome : 'Vendedor removido') },
+      { label: 'Comissão', html: formatPercent(pedido.perc_comissao) },
+      { label: 'Total', num: true, html: `<strong>${formatBRL(pedidoTotal(pedido))}</strong>` },
+      { label: 'Ações', cls: 'actions', html: `<div class="actions"><button class="btn ghost small" type="button" data-action="toggle-pedido" data-id="${attr(pedido.id_pedido)}">${aberto ? 'Ocultar' : 'Ver itens'}</button><button class="icon-btn danger" type="button" data-action="delete" data-entity="pedidos" data-id="${attr(pedido.id_pedido)}" data-name="${attr(cliente ? cliente.nome : 'pedido')}" aria-label="Apagar pedido"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M8 7l1 12h6l1-12"/></svg></button></div>` }
+    ])}</tr>`);
+    if (aberto) {
+      const linhas = (pedido.itens || []).map((item) => {
+        const produto = byId(state.produtos, 'id_produto', item.id_produto);
+        return `<div>${esc(produto ? produto.nome : 'Produto')} · ${item.quantidade} \u00b7 ${formatBRL(item.preco_unitario)}</div>`;
+      }).join('');
+      rows.push(`<tr class="detail" data-filter="${attr(filtro)}"><td colspan="6">${linhas || 'Pedido sem itens.'}</td></tr>`);
+    }
+  });
+  return `<section class="panel">${table(
+    [{ label: 'Pedido' }, { label: 'Empresa' }, { label: 'Vendedor' }, { label: 'Comissão' }, { label: 'Total', num: true }, { label: '' }],
+    rows, 'Nenhum pedido no período', 'Registre a primeira venda. O preço do catálogo fica gravado no pedido.'
+  )}</section>`;
+}
+
+function renderClientes() {
+  const rows = state.clientes.map((c) => `<tr data-filter="${attr([c.nome, c.cnpj, c.telefone, enderecoTexto(c.endereco)].join(' '))}">${cells([
+    { label: 'Empresa', html: `<span class="who">${esc(c.nome)}</span><span class="sub">${esc(enderecoTexto(c.endereco))}</span>` },
+    { label: 'CNPJ', html: esc(c.cnpj) },
+    { label: 'Celular', html: esc(c.telefone) },
+    { label: 'Ações', cls: 'actions', html: actions('clientes', c.id_cliente, c.nome) }
+  ])}</tr>`);
+  return `<section class="panel">${table([{ label: 'Empresa' }, { label: 'CNPJ' }, { label: 'Celular' }, { label: '' }], rows, 'Nenhuma empresa', 'O CNPJ recebe a máscara sozinho e não pode repetir.')}</section>`;
+}
+function renderVendedores() {
+  const rows = state.vendedores.map((v) => `<tr data-filter="${attr([v.nome, v.cpf, v.email, v.telefone, v.regiao && v.regiao.nome_regiao].join(' '))}">${cells([
+    { label: 'Vendedor', html: `<span class="who">${esc(v.nome)}</span><span class="sub">${esc(v.email)} · ${esc(v.telefone)}</span>` },
+    { label: 'CPF', html: esc(v.cpf) },
+    { label: 'Região', html: `<span class="tag">${esc(v.regiao ? v.regiao.nome_regiao : 'Sem região')}</span>` },
+    { label: 'Ações', cls: 'actions', html: actions('vendedores', v.id_vendedor, v.nome) }
+  ])}</tr>`);
+  return `<section class="panel">${table([{ label: 'Vendedor' }, { label: 'CPF' }, { label: 'Região' }, { label: '' }], rows, 'Nenhum vendedor', 'Cada região pode ter apenas um responsável.')}</section>`;
+}
+function renderProdutos() {
+  const rows = state.produtos.map((p) => `<tr data-filter="${attr(p.nome + ' ' + (p.descricao || ''))}">${cells([
+    { label: 'Produto', html: `<span class="who">${esc(p.nome)}</span><span class="sub">${esc(p.descricao || 'Sem descrição')}</span>` },
+    { label: 'Preço', num: true, html: `<strong>${formatBRL(p.preco)}</strong>` },
+    { label: 'Ações', cls: 'actions', html: actions('produtos', p.id_produto, p.nome) }
+  ])}</tr>`);
+  return `<section class="panel">${table([{ label: 'Produto' }, { label: 'Preço', num: true }, { label: '' }], rows, 'Nenhum produto', 'Cadastre os equipamentos antes de abrir um pedido.')}</section>`;
+}
+function renderRegioes() {
+  const rows = state.regioes.map((r) => {
+    const vendedor = state.vendedores.find((v) => mesmoId(v.id_regiao, r.id_regiao));
+    return `<tr data-filter="${attr(r.nome_regiao + ' ' + (vendedor ? vendedor.nome : ''))}">${cells([
+      { label: 'Região', html: `<span class="who">${esc(r.nome_regiao)}</span>` },
+      { label: 'Vendedor', html: vendedor ? esc(vendedor.nome) : '<span class="sub">Livre</span>' },
+      { label: 'Ações', cls: 'actions', html: actions('regioes', r.id_regiao, r.nome_regiao) }
+    ])}</tr>`;
+  });
+  return `<section class="panel">${table([{ label: 'Região' }, { label: 'Vendedor' }, { label: '' }], rows, 'Nenhuma região', 'A Grande Vitória pode ser cadastrada uma cidade por vez.')}</section>`;
+}
+function renderEnderecos() {
+  const rows = state.enderecos.map((e) => {
+    const usos = usoEndereco(e.id_endereco);
+    return `<tr data-filter="${attr(enderecoTexto(e) + ' ' + usos.join(' '))}">${cells([
+      { label: 'Endereço', html: `<span class="who">${esc(e.logradouro)}, ${esc(e.numero)}</span><span class="sub">${esc(e.bairro)} · ${esc(e.cidade)}/${esc(e.estado)} · ${esc(e.cep)}</span>` },
+      { label: 'Uso', html: usos.length ? esc(usos.join(', ')) : '<span class="sub">Sem uso</span>' },
+      { label: 'Ações', cls: 'actions', html: actions('enderecos', e.id_endereco, e.logradouro) }
+    ])}</tr>`;
+  });
+  return `<section class="panel">${table([{ label: 'Endereço' }, { label: 'Uso' }, { label: '' }], rows, 'Nenhum endereço', 'O CEP completo busca a rua sozinho.')}</section>`;
+}
+function actions(entity, id, name) {
+  return `<div class="actions"><button class="btn ghost small" type="button" data-action="open-form" data-entity="${entity}" data-id="${attr(id)}">Editar</button><button class="icon-btn danger" type="button" data-action="delete" data-entity="${entity}" data-id="${attr(id)}" data-name="${attr(name)}" aria-label="Apagar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M8 7l1 12h6l1-12"/></svg></button></div>`;
+}
+
+function applySearch() {
+  const q = state.search.trim().toLowerCase();
+  const rows = [...document.querySelectorAll('#view [data-filter]')];
+  rows.forEach((el) => { el.hidden = Boolean(q) && !el.dataset.filter.toLowerCase().includes(q); });
+  const empty = document.getElementById('searchEmpty');
+  if (empty) empty.hidden = !q || rows.length === 0 || rows.some((el) => !el.hidden);
+}
+
+function field(cfg) {
+  return `<div class="field ${cfg.cls || ''}"><div class="label-row"><label for="${cfg.id}">${cfg.label}${cfg.req ? ' <i>*</i>' : ''}</label>${cfg.max ? `<span class="counter" id="${cfg.id}-count"></span>` : ''}</div>${cfg.control}<small class="msg" id="${cfg.id}-msg">${cfg.hint || ''}</small></div>`;
+}
+function input(id, value, attrs) {
+  return `<input id="${id}" value="${attr(value || '')}" ${attrs || ''}>`;
+}
+function opcoesUF(selecionada) {
+  return `<option value="">UF</option>` + UFS.map((uf) => `<option value="${uf}"${uf === selecionada ? ' selected' : ''}>${uf}</option>`).join('');
+}
+function blocoEndereco(e) {
+  e = e || {};
+  return `<fieldset><legend>Endereço</legend><div class="grid">
+    ${field({ id: 'f-cep', cls: 's2', label: 'CEP', req: true, max: 9, hint: '8 dígitos. A rua é preenchida ao completar.', control: input('f-cep', e.cep, 'inputmode="numeric" maxlength="9" autocomplete="postal-code" required') })}
+    ${field({ id: 'f-logradouro', cls: 's4', label: 'Rua', req: true, control: input('f-logradouro', e.logradouro, 'maxlength="120" autocomplete="address-line1" required') })}
+    ${field({ id: 'f-numero', cls: 's2', label: 'Número', req: true, hint: 'Até 10 caracteres. Use S/N se não houver.', control: input('f-numero', e.numero, 'maxlength="10" required') })}
+    ${field({ id: 'f-complemento', cls: 's4', label: 'Complemento', control: input('f-complemento', e.complemento, 'maxlength="50" autocomplete="address-line2"') })}
+    ${field({ id: 'f-bairro', cls: 's3', label: 'Bairro', req: true, control: input('f-bairro', e.bairro, 'maxlength="60" required') })}
+    ${field({ id: 'f-cidade', cls: 's2', label: 'Cidade', req: true, control: input('f-cidade', e.cidade, 'maxlength="60" autocomplete="address-level2" required') })}
+    ${field({ id: 'f-estado', cls: 's1', label: 'UF', req: true, control: `<select id="f-estado" required>${opcoesUF(e.estado || '')}</select>` })}
+  </div></fieldset>`;
+}
+function opcoesRegiao(selecionada, vendedorId) {
+  const ocupadas = new Map();
+  state.vendedores.forEach((v) => {
+    if (!mesmoId(v.id_vendedor, vendedorId) && v.id_regiao != null && String(v.id_regiao) !== 'undefined') ocupadas.set(String(v.id_regiao), v.nome);
+  });
+  const opts = ['<option value="">Selecione a região</option>'];
+  state.regioes.forEach((r) => {
+    const dono = ocupadas.get(String(r.id_regiao));
+    opts.push(`<option value="${attr(r.id_regiao)}"${String(r.id_regiao) === String(selecionada) ? ' selected' : ''}${dono ? ' disabled' : ''}>${esc(dono ? r.nome_regiao + ' · já é de ' + dono : r.nome_regiao)}</option>`);
+  });
+  return opts.join('');
+}
+
+function openForm(entity, id) {
+  if (entity === 'pedidos') return openPedido();
+  if (entity === 'clientes') return openCliente(id);
+  if (entity === 'vendedores') return openVendedor(id);
+  if (entity === 'produtos') return openProduto(id);
+  if (entity === 'regioes') return openRegiao(id);
+  if (entity === 'enderecos') return openEndereco(id);
+}
+function showModal(eyebrow, title, html, wide) {
+  state.editing = state.editing || {};
+  document.getElementById('modalEyebrow').textContent = eyebrow;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('dialog').classList.toggle('wide', Boolean(wide));
+  document.getElementById('modalForm').innerHTML = html;
+  document.getElementById('modal').hidden = false;
+  const primeiro = document.querySelector('#modalForm input, #modalForm select, #modalForm textarea');
+  if (primeiro) primeiro.focus();
+}
+function closeModal() {
+  document.getElementById('modal').hidden = true;
+  document.getElementById('modalForm').innerHTML = '';
+  state.editing = null;
+}
+
+function openCliente(id) {
+  const cliente = id ? byId(state.clientes, 'id_cliente', id) : null;
+  state.editing = { type: 'clientes', id: id || null };
+  showModal('Empresas', cliente ? 'Editar empresa' : 'Nova empresa', `
+    <p class="help">A máscara do CNPJ entra enquanto você digita. O cadastro só salva com 18 caracteres e dígitos verdadeiros.</p>
+    <fieldset><legend>Dados da empresa</legend><div class="grid">
+      ${field({ id: 'f-nome', cls: 's6', label: 'Razão social', req: true, control: input('f-nome', cliente && cliente.nome, 'maxlength="100" autocomplete="organization" required') })}
+      ${field({ id: 'f-cnpj', cls: 's3', label: 'CNPJ', req: true, max: 18, hint: 'Formato 00.000.000/0000-00', control: input('f-cnpj', cliente && cliente.cnpj, 'inputmode="numeric" maxlength="18" autocomplete="off" required') })}
+      ${field({ id: 'f-telefone', cls: 's3', label: 'Celular', req: true, max: 15, hint: '11 dígitos, com o 9 depois do DDD', control: input('f-telefone', cliente && cliente.telefone, 'inputmode="numeric" maxlength="15" autocomplete="tel" required') })}
+    </div></fieldset>
+    ${blocoEndereco(cliente && cliente.endereco)}
+    <div id="formError" class="form-error" hidden></div>
+    <div class="dialog-actions"><span class="help">Campos com * são obrigatórios.</span><div><button class="btn ghost" type="button" data-action="close-modal">Cancelar</button> <button class="btn" type="submit">Salvar empresa</button></div></div>`, true);
+  bindMask(document.getElementById('f-cnpj'), maskCNPJ, 18);
+  bindMask(document.getElementById('f-telefone'), maskPhone, 15);
+  watchDoc('f-cnpj', (value) => erroCnpj(value, state.editing && state.editing.id));
+  watchDoc('f-telefone', erroTelefone);
+  bindEndereco();
+}
+function openVendedor(id) {
+  const vendedor = id ? byId(state.vendedores, 'id_vendedor', id) : null;
+  if (!state.regioes.length) { toast('Cadastre uma região antes do vendedor.', 'bad'); return; }
+  state.editing = { type: 'vendedores', id: id || null };
+  showModal('Vendedores', vendedor ? 'Editar vendedor' : 'Novo vendedor', `
+    <fieldset><legend>Profissional</legend><div class="grid">
+      ${field({ id: 'f-nome', cls: 's6', label: 'Nome completo', req: true, control: input('f-nome', vendedor && vendedor.nome, 'maxlength="100" autocomplete="name" required') })}
+      ${field({ id: 'f-cpf', cls: 's3', label: 'CPF', req: true, max: 14, hint: 'Formato 000.000.000-00', control: input('f-cpf', vendedor && vendedor.cpf, 'inputmode="numeric" maxlength="14" autocomplete="off" required') })}
+      ${field({ id: 'f-telefone', cls: 's3', label: 'Celular', req: true, max: 15, hint: '15 caracteres: (27) 99999-0000', control: input('f-telefone', vendedor && vendedor.telefone, 'inputmode="numeric" maxlength="15" autocomplete="tel" required') })}
+      ${field({ id: 'f-email', cls: 's3', label: 'E-mail', req: true, control: input('f-email', vendedor && vendedor.email, 'maxlength="100" autocomplete="email" required') })}
+      ${field({ id: 'f-id_regiao', cls: 's3', label: 'Região', req: true, hint: 'Cada região só pode ter um vendedor.', control: `<select id="f-id_regiao" required>${opcoesRegiao(vendedor && vendedor.id_regiao, id || null)}</select>` })}
+    </div></fieldset>
+    ${blocoEndereco(vendedor && vendedor.endereco)}
+    <div id="formError" class="form-error" hidden></div>
+    <div class="dialog-actions"><span></span><div><button class="btn ghost" type="button" data-action="close-modal">Cancelar</button> <button class="btn" type="submit">Salvar vendedor</button></div></div>`, true);
+  bindMask(document.getElementById('f-cpf'), maskCPF, 14);
+  bindMask(document.getElementById('f-telefone'), maskPhone, 15);
+  watchDoc('f-cpf', (value) => erroCpf(value, state.editing && state.editing.id));
+  watchDoc('f-telefone', erroTelefone);
+  bindEndereco();
+}
+function openProduto(id) {
+  const produto = id ? byId(state.produtos, 'id_produto', id) : null;
+  state.editing = { type: 'produtos', id: id || null };
+  const preco = produto ? Number(produto.preco).toFixed(2).replace('.', ',') : '';
+  showModal('Catálogo', produto ? 'Editar produto' : 'Novo produto', `
+    <div class="grid">
+      ${field({ id: 'f-nome', cls: 's6', label: 'Nome', req: true, control: input('f-nome', produto && produto.nome, 'maxlength="100" required') })}
+      ${field({ id: 'f-descricao', cls: 's6', label: 'Descrição', hint: 'Até 255 caracteres.', control: input('f-descricao', produto && produto.descricao, 'maxlength="255"') })}
+      ${field({ id: 'f-preco', cls: 's3', label: 'Preço', req: true, hint: 'Maior que zero, no máximo 2 casas.', control: `<div class="money"><span>R$</span><input id="f-preco" inputmode="decimal" maxlength="12" value="${attr(preco)}" required></div>` })}
+    </div>
+    <div id="formError" class="form-error" hidden></div>
+    <div class="dialog-actions"><span></span><div><button class="btn ghost" type="button" data-action="close-modal">Cancelar</button> <button class="btn" type="submit">Salvar produto</button></div></div>`);
+  document.getElementById('f-preco').addEventListener('input', () => {
+    const el = document.getElementById('f-preco');
+    el.value = el.value.replace(/[^\d,]/g, '').replace(/(,.*),/g, '$1').replace(/(,\d{2})\d+/, '$1');
+  });
+}
+function openRegiao(id) {
+  const regiao = id ? byId(state.regioes, 'id_regiao', id) : null;
+  state.editing = { type: 'regioes', id: id || null };
+  showModal('Território', regiao ? 'Editar região' : 'Nova região', `
+    ${field({ id: 'f-nome', label: 'Nome da região', req: true, hint: 'Só letras. Ex.: Vila Velha. O nome não pode repetir.', control: input('f-nome', regiao && regiao.nome_regiao, 'maxlength="50" required') })}
+    <div id="formError" class="form-error" hidden></div>
+    <div class="dialog-actions"><span></span><div><button class="btn ghost" type="button" data-action="close-modal">Cancelar</button> <button class="btn" type="submit">Salvar região</button></div></div>`);
+}
+function openEndereco(id) {
+  const endereco = id ? byId(state.enderecos, 'id_endereco', id) : null;
+  state.editing = { type: 'enderecos', id: id || null };
+  showModal('Endereços', endereco ? 'Editar endereço' : 'Novo endereço', `
+    ${blocoEndereco(endereco)}
+    <div id="formError" class="form-error" hidden></div>
+    <div class="dialog-actions"><span></span><div><button class="btn ghost" type="button" data-action="close-modal">Cancelar</button> <button class="btn" type="submit">Salvar endereço</button></div></div>`, true);
+  bindEndereco();
+}
+function openPedido() {
+  if (!state.clientes.length || !state.vendedores.length || !state.produtos.length) {
+    toast('Para vender, cadastre ao menos uma empresa, um vendedor e um produto.', 'bad');
+    return;
+  }
+  state.editing = { type: 'pedidos', id: null };
+  const clientes = state.clientes.map((c) => `<option value="${attr(c.id_cliente)}">${esc(c.nome)}</option>`).join('');
+  const vendedores = state.vendedores.map((v) => `<option value="${attr(v.id_vendedor)}">${esc(v.nome)}${v.regiao ? ' · ' + esc(v.regiao.nome_regiao) : ''}</option>`).join('');
+  showModal('Pedidos', 'Novo pedido', `
+    <div class="grid">
+      ${field({ id: 'f-cliente', cls: 's3', label: 'Empresa', req: true, control: `<select id="f-cliente" required><option value="">Selecione</option>${clientes}</select>` })}
+      ${field({ id: 'f-vendedor', cls: 's3', label: 'Vendedor', req: true, control: `<select id="f-vendedor" required><option value="">Selecione</option>${vendedores}</select>` })}
+      ${field({ id: 'f-data', cls: 's3', label: 'Data', req: true, control: input('f-data', hoje(), `type="date" min="2000-01-01" max="${hoje()}" required`) })}
+      ${field({ id: 'f-comissao', cls: 's3', label: 'Comissão deste pedido', req: true, hint: 'De 0 a 100. Fica gravada só neste pedido.', control: input('f-comissao', '5', 'inputmode="decimal" maxlength="6" required') })}
+    </div>
+    <fieldset><legend>Produtos</legend><div id="itens"></div><button class="btn ghost" type="button" data-action="add-item">Adicionar produto</button></fieldset>
+    <div id="formError" class="form-error" hidden></div>
+    <div class="dialog-actions"><div class="total-box">Total do pedido<strong id="pedidoTotal">R$ 0,00</strong></div><div><button class="btn ghost" type="button" data-action="close-modal">Cancelar</button> <button class="btn" type="submit">Registrar pedido</button></div></div>`, true);
+  document.getElementById('f-comissao').addEventListener('input', () => {
+    const el = document.getElementById('f-comissao');
+    el.value = el.value.replace(/[^\d,]/g, '').replace(/(,.*),/g, '$1').replace(/(,\d{2})\d+/, '$1');
+  });
+  addItemRow();
+}
+
+function bindMask(inputEl, formatter, max) {
+  const paint = (notify) => {
+    const antes = digits(inputEl.value.slice(0, inputEl.selectionStart || 0)).length;
+    inputEl.value = formatter(inputEl.value);
+    let count = 0; let pos = inputEl.value.length;
+    for (let i = 0; i < inputEl.value.length; i++) {
+      if (/\d/.test(inputEl.value[i])) count++;
+      if (count >= antes) { pos = i + 1; break; }
+    }
+    if (document.activeElement === inputEl) inputEl.setSelectionRange(pos, pos);
+    const counter = document.getElementById(inputEl.id + '-count');
+    if (counter) counter.textContent = inputEl.value.length + '/' + max;
+    if (notify) inputEl.dispatchEvent(new Event('masked'));
+  };
+  inputEl.addEventListener('input', () => paint(true));
+  paint(false);
+}
+function watchDoc(id, validator) {
+  const el = document.getElementById(id);
+  const hint = document.getElementById(id + '-msg').textContent;
+  const run = () => {
+    if (el.value.length < el.maxLength) { setMsg(id, hint, ''); return; }
+    const erro = validator(el.value);
+    setMsg(id, erro || 'Formato aceito.', erro ? 'bad' : 'good');
+  };
+  el.addEventListener('masked', run);
+  el.addEventListener('blur', run);
+  if (el.value.length === el.maxLength) run();
+}
+function bindEndereco() {
+  bindMask(document.getElementById('f-cep'), maskCEP, 9);
+  let timer;
+  document.getElementById('f-cep').addEventListener('masked', () => {
+    clearTimeout(timer);
+    const cep = digits(document.getElementById('f-cep').value);
+    if (cep.length !== 8) return;
+    timer = setTimeout(() => buscarCep(cep), 200);
+  });
+}
+async function buscarCep(cep) {
+  const msg = document.getElementById('f-cep-msg');
+  msg.className = 'msg';
+  msg.textContent = 'Buscando CEP...';
+  try {
+    const res = await fetch('https://viacep.com.br/ws/' + cep + '/json/');
+    const data = await res.json();
+    if (data.erro) { msg.className = 'msg bad'; msg.textContent = 'Não encontrei esse CEP. Preencha o endereço.'; return; }
+    if (data.logradouro) document.getElementById('f-logradouro').value = data.logradouro;
+    if (data.bairro) document.getElementById('f-bairro').value = data.bairro;
+    if (data.localidade) document.getElementById('f-cidade').value = data.localidade;
+    if (data.uf) document.getElementById('f-estado').value = data.uf;
+    msg.className = 'msg good';
+    msg.textContent = data.logradouro ? 'Endereço preenchido. Confira o número.' : 'CEP de cidade. Complete a rua.';
+  } catch {
+    msg.className = 'msg';
+    msg.textContent = 'Sem acesso ao ViaCEP. Preencha o endereço manualmente.';
+  }
+}
+function setMsg(id, text, kind) {
+  const inputEl = document.getElementById(id);
+  const msg = document.getElementById(id + '-msg');
+  if (inputEl) inputEl.classList.toggle('bad', kind === 'bad');
+  if (inputEl) inputEl.classList.toggle('good', kind === 'good');
+  if (!msg) return;
+  msg.className = 'msg' + (kind ? ' ' + kind : '');
+  if (text) msg.textContent = text;
+}
+function erroCnpj(value, idIgnorado) {
+  if (value.length < 18) return `O CNPJ precisa ter 18 caracteres. Faltam ${18 - value.length}.`;
+  if (!cnpjValido(value)) return 'CNPJ inválido. Confira os dígitos verificadores.';
+  const repetido = state.clientes.some((c) => digits(c.cnpj) === digits(value) && c.id_cliente !== idIgnorado);
+  if (repetido) return 'Este CNPJ já está cadastrado.';
+  return '';
+}
+function erroCpf(value, idIgnorado) {
+  if (value.length < 14) return `O CPF precisa ter 14 caracteres. Faltam ${14 - value.length}.`;
+  if (!cpfValido(value)) return 'CPF inválido. Confira os dígitos.';
+  const repetido = state.vendedores.some((v) => digits(v.cpf) === digits(value) && v.id_vendedor !== idIgnorado);
+  if (repetido) return 'Este CPF já está cadastrado.';
+  return '';
+}
+function erroTelefone(value) {
+  if (value.length < 15) return `O celular precisa ter 15 caracteres. Faltam ${15 - value.length}.`;
+  if (!value.includes(' 9')) return 'Depois do DDD, o celular começa com 9.';
+  if (!DDDS.has(value.slice(1, 3))) return 'Esse DDD não existe.';
+  if (!telefoneCompleto(value)) return 'Use o formato (27) 99999-0000.';
+  return '';
+}
+function erroCep(value) {
+  if (digits(value).length < 8) return 'O CEP precisa ter 8 dígitos, no formato 00000-000.';
+  if (value === '00000-000') return 'CEP inválido.';
+  return '';
+}
+function lerDinheiro(value) {
+  const texto = String(value || '').trim();
+  if (!texto) return null;
+  const normal = texto.includes(',') ? texto.replace(/\./g, '').replace(',', '.') : texto;
+  const n = Number(normal);
+  if (!Number.isFinite(n) || Math.abs(n * 100 - Math.round(n * 100)) > 1e-6) return null;
+  return Math.round(n * 100) / 100;
+}
+function showFormError(message) {
+  const box = document.getElementById('formError');
+  if (!box) return;
+  box.hidden = !message;
+  box.textContent = message || '';
+}
+function payloadEndereco() {
+  return {
+    cep: document.getElementById('f-cep').value.trim(),
+    logradouro: document.getElementById('f-logradouro').value.trim(),
+    numero: document.getElementById('f-numero').value.trim(),
+    complemento: document.getElementById('f-complemento').value.trim(),
+    bairro: document.getElementById('f-bairro').value.trim(),
+    cidade: document.getElementById('f-cidade').value.trim(),
+    estado: document.getElementById('f-estado').value
+  };
+}
+function validarEndereco(erros) {
+  const e = payloadEndereco();
+  const cep = erroCep(e.cep); if (cep) erros['f-cep'] = cep;
+  if (e.logradouro.length < 2) erros['f-logradouro'] = 'Informe a rua.';
+  if (!/^[\p{L}0-9./-]{1,10}$/u.test(e.numero)) erros['f-numero'] = 'Use até 10 caracteres, como 100 ou S/N.';
+  if (e.complemento.length > 50) erros['f-complemento'] = 'O complemento pode ter no máximo 50 caracteres.';
+  if (e.bairro.length < 2) erros['f-bairro'] = 'Informe o bairro.';
+  if (e.cidade.length < 2) erros['f-cidade'] = 'Informe a cidade.';
+  if (!UFS.includes(e.estado)) erros['f-estado'] = 'Escolha a UF.';
+  return e;
+}
+function aplicarErros(erros) {
+  Object.entries(erros).forEach(([id, mensagem]) => setMsg(id, mensagem, 'bad'));
+  const primeiro = Object.keys(erros)[0];
+  if (primeiro) {
+    const el = document.getElementById(primeiro);
+    if (el) el.focus();
+  }
+  return Object.keys(erros).length === 0;
+}
+
+async function saveForm(event) {
+  event.preventDefault();
+  if (!state.editing || state.saving) return;
+  document.querySelectorAll('#modalForm .bad').forEach((el) => el.classList.remove('bad'));
+  showFormError('');
+  const tipo = state.editing.type;
+  const id = state.editing.id;
+  try {
+    if (tipo === 'pedidos') return await savePedido();
+    const erros = {};
+    let body = {};
+    let path = '/' + tipo;
+    if (tipo === 'clientes' || tipo === 'vendedores' || tipo === 'enderecos') Object.assign(body, validarEndereco(erros));
+    if (tipo === 'clientes') {
+      body.nome = document.getElementById('f-nome').value.trim();
+      body.cnpj = document.getElementById('f-cnpj').value.trim();
+      body.telefone = document.getElementById('f-telefone').value.trim();
+      if (!nomeValido(body.nome)) erros['f-nome'] = 'Informe a razão social, de 2 a 100 caracteres.';
+      const cnpj = erroCnpj(body.cnpj, id); if (cnpj) erros['f-cnpj'] = cnpj;
+      const tel = erroTelefone(body.telefone); if (tel) erros['f-telefone'] = tel;
+    }
+    if (tipo === 'vendedores') {
+      body.nome = document.getElementById('f-nome').value.trim();
+      body.cpf = document.getElementById('f-cpf').value.trim();
+      body.telefone = document.getElementById('f-telefone').value.trim();
+      body.email = document.getElementById('f-email').value.trim().toLowerCase();
+      body.id_regiao = document.getElementById('f-id_regiao').value;
+      if (!nomeValido(body.nome)) erros['f-nome'] = 'Informe o nome completo.';
+      const cpf = erroCpf(body.cpf, id); if (cpf) erros['f-cpf'] = cpf;
+      const tel = erroTelefone(body.telefone); if (tel) erros['f-telefone'] = tel;
+      if (!emailValido(body.email)) erros['f-email'] = 'E-mail inválido.';
+      else if (state.vendedores.some((v) => v.email.toLowerCase() === body.email && v.id_vendedor !== id)) erros['f-email'] = 'Este e-mail já está cadastrado.';
+      if (!body.id_regiao) erros['f-id_regiao'] = 'Escolha uma região livre.';
+    }
+    if (tipo === 'produtos') {
+      body = {
+        nome: document.getElementById('f-nome').value.trim(),
+        descricao: document.getElementById('f-descricao').value.trim(),
+        preco: lerDinheiro(document.getElementById('f-preco').value)
+      };
+      if (!nomeValido(body.nome)) erros['f-nome'] = 'Informe o nome do produto.';
+      if (body.descricao.length > 255) erros['f-descricao'] = 'A descrição pode ter no máximo 255 caracteres.';
+      if (body.preco == null || body.preco < 0.01 || body.preco > 9999999.99) erros['f-preco'] = 'Informe um preço maior que zero, com no máximo 2 casas.';
+    }
+    if (tipo === 'regioes') {
+      body = { nome_regiao: document.getElementById('f-nome').value.trim().replace(/\s+/g, ' ') };
+      if (!/^[\p{L}][\p{L}\s'-]{1,49}$/u.test(body.nome_regiao)) erros['f-nome'] = 'Use de 2 a 50 letras, sem números.';
+      else if (state.regioes.some((r) => norm(r.nome_regiao) === norm(body.nome_regiao) && r.id_regiao !== id)) erros['f-nome'] = 'Já existe uma região com este nome.';
+    }
+    if (!aplicarErros(erros)) return;
+    state.saving = true;
+    const submit = document.querySelector('#modalForm button[type="submit"]');
+    if (submit) submit.disabled = true;
+    await api(id ? path + '/' + id : path, id ? 'PUT' : 'POST', body);
+    closeModal();
+    await reload();
+    render();
+    toast(id ? 'Cadastro atualizado.' : 'Cadastro salvo.');
+  } catch (err) {
+    showFormError(err.message);
+    toast(err.message, 'bad');
+  } finally {
+    state.saving = false;
+  }
+}
+
+function addItemRow() {
+  const cont = document.getElementById('itens');
+  const row = document.createElement('div');
+  row.className = 'item-row';
+  const opts = state.produtos.map((p) => `<option value="${attr(p.id_produto)}" data-preco="${attr(p.preco)}">${esc(p.nome)}</option>`).join('');
+  row.innerHTML = `<select class="item-prod" aria-label="Produto"><option value="">Produto</option>${opts}</select><input class="item-qtd" inputmode="numeric" maxlength="4" value="1" aria-label="Quantidade"><input class="item-preco" readonly tabindex="-1" aria-label="Preço unitário"><strong class="line-total">R$ 0,00</strong><button class="icon-btn danger" type="button" data-action="remove-item" aria-label="Remover produto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M8 7l1 12h6l1-12"/></svg></button>`;
+  cont.appendChild(row);
+  refreshItens();
+}
+function refreshItens() {
+  const selects = [...document.querySelectorAll('.item-prod')];
+  const usados = new Set(selects.map((s) => s.value).filter(Boolean));
+  let total = 0;
+  selects.forEach((select) => {
+    [...select.options].forEach((op) => { if (op.value) op.disabled = op.value !== select.value && usados.has(op.value); });
+    const row = select.closest('.item-row');
+    const preco = Number(select.selectedOptions[0] && select.selectedOptions[0].dataset.preco || 0);
+    const qtd = Number(digits(row.querySelector('.item-qtd').value) || 0);
+    row.querySelector('.item-preco').value = preco ? formatBRL(preco) : '';
+    row.querySelector('.line-total').textContent = formatBRL(preco * qtd);
+    total += preco * qtd;
+  });
+  const box = document.getElementById('pedidoTotal');
+  if (box) box.textContent = formatBRL(total);
+}
+async function savePedido() {
+  const erros = {};
+  if (!document.getElementById('f-cliente').value) erros['f-cliente'] = 'Escolha a empresa.';
+  if (!document.getElementById('f-vendedor').value) erros['f-vendedor'] = 'Escolha o vendedor.';
+  const data = document.getElementById('f-data').value;
+  if (!data) erros['f-data'] = 'Informe a data.';
+  else if (data > hoje()) erros['f-data'] = 'A data não pode ser no futuro.';
+  const comissao = lerDinheiro(document.getElementById('f-comissao').value);
+  if (comissao == null || comissao < 0 || comissao > 100) erros['f-comissao'] = 'A comissão fica entre 0 e 100.';
+  const itens = [];
+  const vistos = new Set();
+  document.querySelectorAll('.item-row').forEach((row) => {
+    const idProduto = row.querySelector('.item-prod').value;
+    const qtd = Number(digits(row.querySelector('.item-qtd').value));
+    if (!idProduto) return;
+    if (vistos.has(idProduto)) return;
+    vistos.add(idProduto);
+    if (!Number.isInteger(qtd) || qtd < 1 || qtd > 9999) erros['f-cliente'] = 'A quantidade deve ser um inteiro de 1 a 9999.';
+    else itens.push({ id_produto: idProduto, quantidade: qtd });
+  });
+  if (!itens.length) showFormError('Inclua pelo menos um produto e a quantidade.');
+  if (!aplicarErros(erros) || !itens.length) return;
+  state.saving = true;
+  const submit = document.querySelector('#modalForm button[type="submit"]');
+  if (submit) submit.disabled = true;
+  await api('/pedidos', 'POST', {
+    id_cliente: document.getElementById('f-cliente').value,
+    id_vendedor: document.getElementById('f-vendedor').value,
+    data_pedido: data,
+    perc_comissao: comissao,
+    itens
+  });
+  closeModal();
+  await reload();
+  state.tab = 'pedidos';
+  render();
+  toast('Pedido registrado. O preço ficou gravado como estava no catálogo.');
+}
+
+async function removeRecord(entity, id, name) {
+  const texto = {
+    pedidos: `Apagar o pedido de ${name}? O histórico desta venda sai do banco.`,
+    clientes: `Apagar a empresa ${name}? Se ela tiver pedidos, o banco não deixa.`,
+    vendedores: `Apagar o vendedor ${name}? Se ele tiver pedidos, o banco não deixa.`,
+    produtos: `Apagar o produto ${name}? Se ele já foi vendido, o banco não deixa.`,
+    regioes: `Apagar a região ${name}? Se houver um vendedor nela, o banco não deixa.`,
+    enderecos: `Apagar este endereço? Se alguém o estiver usando, o banco não deixa.`
+  }[entity];
+  const ok = await ask(entity === 'pedidos' ? 'Apagar pedido' : 'Apagar cadastro', texto);
+  if (!ok) return;
+  try {
+    await api('/' + entity + '/' + id, 'DELETE');
+    if (state.pedidoAberto === id) state.pedidoAberto = '';
+    await reload();
+    render();
+    toast('Registro apagado.');
+  } catch (err) { toast(err.message, 'bad'); }
+}
+function ask(title, text) {
+  return new Promise((resolve) => {
+    state.confirm = resolve;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent = text;
+    document.getElementById('confirm').hidden = false;
+  });
+}
+function closeConfirm(answer) {
+  document.getElementById('confirm').hidden = true;
+  if (state.confirm) state.confirm(answer);
+  state.confirm = null;
+}
+
+function renderOffline() {
+  if (window.__modoJogo && document.getElementById('dino')) return;
+  window.__modoJogo = true;
+  document.body.innerHTML = '<div id="dinoPage" style="position:fixed;inset:0;background:#f7f7f7;overflow:hidden"><canvas id="dino"></canvas><p id="dinoHint" style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);margin:0;font:600 16px Segoe UI,sans-serif;color:#535353;pointer-events:none;text-align:center">Sem conexão com o banco<br>Pressione espaço para jogar</p></div>';
+  iniciarCorrida();
+}
+
+function iniciarCorrida() {
+  const canvas = document.getElementById('dino');
+  const dica = document.getElementById('dinoHint');
+  const ctx = canvas.getContext('2d');
+  let largura = 0;
+  let altura = 0;
+  let chao = 0;
+  const corredor = { x: 56, y: 0, vy: 0, agachado: false };
+  let obstaculos = [];
+  let velocidade = 6;
+  let pontos = 0;
+  let recorde = Number(localStorage.getItem('central-dino-recorde') || 0);
+  let jogando = false;
+  let morto = false;
+  let espera = 90;
+  let quadro = 0;
+  let tinta = '#535353';
+
+  function ajustar() {
+    largura = canvas.width = window.innerWidth;
+    altura = canvas.height = window.innerHeight;
+    chao = Math.round(altura * 0.68);
+  }
+  ajustar();
+  window.addEventListener('resize', ajustar);
+
+  function pular() {
+    if (!jogando || morto) {
+      corredor.y = 0;
+      corredor.vy = 0;
+      corredor.agachado = false;
+      obstaculos = [];
+      velocidade = 6;
+      pontos = 0;
+      espera = 90;
+      morto = false;
+      jogando = true;
+      dica.hidden = true;
+      return;
+    }
+    if (corredor.y === 0 && !corredor.agachado) corredor.vy = -13.2;
+  }
+  function agachar(ativo) {
+    if (jogando && !morto && corredor.y === 0) corredor.agachado = ativo;
+  }
+  function tecla(evento) {
+    if (evento.key === ' ' || evento.key === 'ArrowUp') { evento.preventDefault(); pular(); }
+    if (evento.key === 'ArrowDown') { evento.preventDefault(); agachar(true); }
+  }
+  function soltar(evento) {
+    if (evento.key === 'ArrowDown') agachar(false);
+  }
+  window.addEventListener('keydown', tecla);
+  window.addEventListener('keyup', soltar);
+  canvas.addEventListener('pointerdown', (evento) => { evento.preventDefault(); pular(); });
+
+  function novoObstaculo() {
+    const voo = pontos > 350 && Math.random() < 0.28;
+    if (voo) {
+      obstaculos.push({ x: largura + 10, y: chao - 70 - Math.random() * 42, w: 42, h: 22, voo: true });
+      return;
+    }
+    const largo = Math.random() < 0.35;
+    obstaculos.push({ x: largura + 10, w: largo ? 32 : 16, h: 32 + Math.round(Math.random() * 24), voo: false });
+  }
+  function encosta(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+  function desenharCorredor() {
+    const alto = corredor.agachado ? 26 : 46;
+    const base = chao - alto + corredor.y;
+    const corpo = corredor.agachado ? 58 : 40;
+    ctx.fillStyle = tinta;
+    ctx.fillRect(corredor.x, base + 10, corpo, alto - 10);
+    ctx.fillRect(corredor.x + corpo - 16, base, 16, 18);
+    ctx.fillStyle = tinta === '#535353' ? '#f7f7f7' : '#1b1b1b';
+    ctx.fillRect(corredor.x + corpo - 8, base + 5, 4, 4);
+    ctx.fillStyle = tinta;
+    const passo = Math.floor(quadro / 8) % 2;
+    if (corredor.y === 0) {
+      ctx.fillRect(corredor.x + 8 + passo * 10, base + alto - 8, 8, 8);
+      ctx.fillRect(corredor.x + 22 - passo * 8, base + alto - 4, 8, 4);
+    }
+  }
+
+  function quadroJogo() {
+    requestAnimationFrame(quadroJogo);
+    quadro += 1;
+    const noite = Math.floor(pontos / 700) % 2 === 1;
+    tinta = noite ? '#f7f7f7' : '#535353';
+    ctx.fillStyle = noite ? '#1b1b1b' : '#f7f7f7';
+    ctx.fillRect(0, 0, largura, altura);
+    ctx.strokeStyle = noite ? '#e8e8e8' : '#535353';
+    ctx.beginPath();
+    ctx.moveTo(0, chao + 1);
+    ctx.lineTo(largura, chao + 1);
+    ctx.stroke();
+
+    if (jogando && !morto) {
+      pontos += velocidade * 0.08;
+      velocidade = Math.min(15, 6 + pontos / 450);
+      corredor.vy += 0.72;
+      corredor.y += corredor.vy;
+      if (corredor.y > 0) { corredor.y = 0; corredor.vy = 0; }
+      espera -= velocidade;
+      if (espera <= 0) {
+        novoObstaculo();
+        espera = 260 + Math.random() * 240;
+      }
+      obstaculos.forEach((item) => { item.x -= velocidade; });
+      obstaculos = obstaculos.filter((item) => item.x > -80);
+      const corpo = {
+        x: corredor.x + 8,
+        y: chao - (corredor.agachado ? 24 : 44) + corredor.y,
+        w: corredor.agachado ? 50 : 30,
+        h: corredor.agachado ? 20 : 36
+      };
+      for (const item of obstaculos) {
+        const alvo = { x: item.x, y: item.voo ? item.y : chao - item.h, w: item.w, h: item.h };
+        if (encosta(corpo, alvo)) {
+          morto = true;
+          jogando = false;
+          recorde = Math.max(recorde, Math.floor(pontos));
+          localStorage.setItem('central-dino-recorde', String(recorde));
+          dica.hidden = false;
+          dica.textContent = 'Fim de jogo. Pressione espaço para recomeçar.';
+        }
+      }
+    }
+
+    ctx.fillStyle = tinta;
+    obstaculos.forEach((item) => {
+      const topo = item.voo ? item.y : chao - item.h;
+      ctx.fillRect(item.x, topo, item.w, item.h);
+      if (!item.voo) ctx.fillRect(item.x + 4, topo - 8, 6, 10);
+    });
+    desenharCorredor();
+    ctx.font = '16px Consolas, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('HI ' + String(recorde).padStart(5, '0') + '  ' + String(Math.floor(pontos)).padStart(5, '0'), largura - 20, 32);
+  }
+  quadroJogo();
+}
+
+async function vigiarConexao() {
+  try {
+    const resposta = await fetch(API + '/health', { cache: 'no-store' });
+    if (!resposta.ok) throw new Error('sem servidor');
+    if (window.__modoJogo) location.reload();
+  } catch (err) {
+    renderOffline();
+  }
+}
+
+document.body.addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  if (action === 'nav') { state.tab = btn.dataset.tab; state.search = ''; document.getElementById('search').value = ''; document.body.classList.remove('nav-open'); document.querySelector('.backdrop').hidden = true; render(); }
+  if (action === 'open-nav') { document.body.classList.add('nav-open'); document.querySelector('.backdrop').hidden = false; }
+  if (action === 'close-nav') { document.body.classList.remove('nav-open'); document.querySelector('.backdrop').hidden = true; }
+  if (action === 'open-form') openForm(btn.dataset.entity, btn.dataset.id);
+  if (action === 'close-modal') closeModal();
+  if (action === 'delete') removeRecord(btn.dataset.entity, btn.dataset.id, btn.dataset.name);
+  if (action === 'toggle-pedido') { state.pedidoAberto = state.pedidoAberto === btn.dataset.id ? '' : btn.dataset.id; render(); }
+  if (action === 'add-item') addItemRow();
+  if (action === 'remove-item') { const row = btn.closest('.item-row'); if (document.querySelectorAll('.item-row').length === 1) { toast('O pedido precisa de pelo menos um produto.', 'bad'); return; } row.remove(); refreshItens(); }
+  if (action === 'confirm-yes') closeConfirm(true);
+  if (action === 'confirm-no') closeConfirm(false);
+});
+document.body.addEventListener('input', (event) => {
+  if (event.target.classList && (event.target.classList.contains('item-qtd') || event.target.classList.contains('item-prod'))) {
+    if (event.target.classList.contains('item-qtd')) event.target.value = digits(event.target.value).slice(0, 4);
+    refreshItens();
+  }
+});
+document.body.addEventListener('change', (event) => {
+  if (event.target.id === 'regiaoRelatorio') { state.regiaoRelatorio = event.target.value; render(); }
+  if (event.target.id === 'dateStart' || event.target.id === 'dateEnd') {
+    state.dateStart = document.getElementById('dateStart').value;
+    state.dateEnd = document.getElementById('dateEnd').value;
+    if (state.dateStart && state.dateEnd && state.dateStart > state.dateEnd) { toast('A data inicial está depois da final.', 'bad'); return; }
+    render();
+  }
+  if (event.target.classList && event.target.classList.contains('item-prod')) refreshItens();
+});
+document.getElementById('search').addEventListener('input', (event) => { state.search = event.target.value; applySearch(); });
+document.getElementById('modalForm').addEventListener('submit', saveForm);
+document.addEventListener('keydown', (event) => {
+  if (window.__modoJogo) return;
+  if (event.key === 'Escape') {
+    const confirmacao = document.getElementById('confirm');
+    const modal = document.getElementById('modal');
+    if (!confirmacao || !modal) return;
+    if (!confirmacao.hidden) closeConfirm(false);
+    else if (!modal.hidden) closeModal();
+    else document.body.classList.remove('nav-open');
+  }
+});
+
+async function boot() {
+  try {
+    await reload();
+    render();
+  } catch (err) {
+    renderOffline();
+  }
+  setInterval(vigiarConexao, 2000);
+}
+boot();
+</script>
+</body>
+</html>
