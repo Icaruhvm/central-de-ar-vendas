@@ -48,6 +48,12 @@ async function main() {
     if (!doc.cnpjValido(valor)) throw new Error('CNPJ inválido: ' + valor);
   });
 
+  let host = '';
+  try { host = new URL(config.mongoUri).hostname; } catch { host = ''; }
+  if (host !== '127.0.0.1' && host !== 'localhost') {
+    console.error('O seed só roda com um MongoDB local. Ele apaga os dados do banco, então não aponta para o endereço de produção.');
+    process.exit(1);
+  }
   await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 15000 });
   await Promise.all([Pedido, Cliente, Vendedor, Endereco, Produto, Regiao].map(limpar));
   await aplicarValidadores(mongoose.connection.db);

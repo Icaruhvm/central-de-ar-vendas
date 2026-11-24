@@ -8,6 +8,8 @@ No painel dá para ver o total vendido por região, cliente, vendedor e produto,
 
 Feito com Node.js, Express e MongoDB. A tela abre no navegador, servida pela própria API.
 
+O painel publicado está em [https://central-de-ar.vercel.app](https://central-de-ar.vercel.app). A senha de acesso fica só nas variáveis de ambiente da Vercel, não neste repositório.
+
 ## Para rodar
 
 Você vai precisar do [Node.js](https://nodejs.org/) 18 ou mais novo, e de um MongoDB. Pode ser o que está instalado na sua máquina ou um cluster grátis no [MongoDB Atlas](https://www.mongodb.com/atlas).
@@ -19,7 +21,7 @@ copy .env.example .env
 
 No Mac ou no Linux, o segundo comando é `cp .env.example .env`.
 
-Abra o `.env` e coloque a conexão do seu banco no lugar do exemplo:
+Abra o `.env` e preencha a conexão do banco, uma senha sua para entrar no painel (`APP_PASSWORD`, no mínimo 8 caracteres) e uma chave longa e aleatória em `SESSION_SECRET`. A conexão local fica assim:
 
 ```text
 MONGO_URI=mongodb://127.0.0.1:27017/central_de_ar
@@ -28,7 +30,7 @@ MONGO_URI=mongodb://127.0.0.1:27017/central_de_ar
 Se for Atlas, fica mais ou menos assim:
 
 ```text
-MONGO_URI=mongodb+srv://usuario:senha@cluster.mongodb.net/central_de_ar
+MONGO_URI=mongodb+srv://USUARIO:SENHA@cluster.mongodb.net/central_de_ar
 ```
 
 Se a senha tiver `@`, `#` ou `:`, esses caracteres precisam ir codificados na URI, senão a conexão quebra no meio.
@@ -41,7 +43,7 @@ Depois é só:
 npm start
 ```
 
-Abra [http://localhost:3000](http://localhost:3000). Se deu certo, o terminal avisa a porta e a página mostra **Conectado ao banco**.
+Abra [http://localhost:3000](http://localhost:3000). A primeira tela pede a senha do `APP_PASSWORD`. Se deu certo, o terminal avisa a porta e, depois do login, a página mostra **Conectado ao banco**.
 
 ## Para testar
 
@@ -77,5 +79,16 @@ A resposta é `{"ok":true}`.
 | Comando | O que faz |
 | --- | --- |
 | `npm start` | Sobe o servidor na porta do `.env` (3000, se você não mudar) |
-| `npm run seed` | Troca os dados do banco pelo conjunto de demonstração |
-| `node scripts/align-database.js` | Acerta validadores e apaga coleções com nome antigo. Só use num banco que seja seu |
+| `npm run seed` | Troca os dados do banco local pelo conjunto de demonstração |
+
+## Na Vercel
+
+O site no ar: [https://central-de-ar.vercel.app](https://central-de-ar.vercel.app).
+
+O painel não abre sem senha. Essa senha não está no código. Na Vercel, o projeto usa só estas variáveis, marcadas como sensíveis:
+
+- `MONGO_URI`
+- `APP_PASSWORD`
+- `SESSION_SECRET`
+
+O arquivo `.env` não entra no Git. O banco precisa aceitar conexão vinda da Vercel. No Atlas, isso fica em Network Access. Se a senha do banco já tiver aparecido em algum arquivo antigo, troque essa senha no banco e atualize a variável na Vercel.

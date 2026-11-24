@@ -1,16 +1,28 @@
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const mongoose = require('mongoose');
-const cors = require('cors');
 const config = require('./config');
 const doc = require('./lib/documento');
+const acesso = require('./lib/acesso');
 const {
   Endereco, Regiao, Vendedor, Cliente, Produto, Pedido, aplicarValidadores
 } = require('./models');
 
 const app = express();
-app.use(cors());
-app.use(express.json({ limit: '200kb' }));
+app.disable('x-powered-by');
+app.set('trust proxy', 1);
+app.set('query parser', 'simple');
+app.use(acesso.cabecalhos);
+app.use(freio);
+app.use(conferirOrigem);
+app.use(express.json({ limit: '80kb', strict: true }));
+app.use((err, req, res, next) => {
+  if (err && err.type === 'entity.parse.failed') return res.status(400).json({ erro: 'JSON inválido.' });
+  if (err && err.type === 'entity.too.large') return res.status(413).json({ erro: 'Pedido grande demais.' });
+  return next(err);
+});
+app.use(corpoJson);
 
 function falha(mensagem, status = 400) {
   const erro = new Error(mensagem);
@@ -40,8 +52,120 @@ function sendError(res, err) {
   if (err && err.code === 121) {
     return res.status(400).json({ erro: 'O banco recusou o cadastro: o formato não obedece às regras da coleção.' });
   }
-  const status = err && err.status ? err.status : 400;
-  return res.status(status).json({ erro: (err && err.message) || 'Não foi possível concluir.' });
+  if (err && err.status && err.status < 500) {
+    return res.status(err.status).json({ erro: err.message || 'Não foi possível concluir.' });
+  }
+  console.error(redigir(err && err.message));
+  return res.status(500).json({ erro: 'Não foi possível concluir.' });
+}
+
+function redigir(texto) {
+  return String(texto || 'erro').replace(/mongodb(?:\+srv)?:\/\/\S+/gi, 'mongodb://***');
+}
+
+function freio(req, res, next) {
+  const ip = acesso.ipDe(req);
+  let ok = true;
+  if (req.path === '/api/entrar') ok = acesso.limitar('entrar:' + ip, 8, 15 * 60 * 1000);
+  else if (req.path.startsWith('/api/consulta-cnpj')) ok = acesso.limitar('cnpj:' + ip, 20, 60 * 1000);
+  else if (req.method === 'GET' || req.method === 'HEAD') ok = acesso.limitar('ler:' + ip, 300, 60 * 1000);
+  else ok = acesso.limitar('gravar:' + ip, 60, 60 * 1000);
+  if (ok) return next();
+  const mensagem = req.path === '/api/entrar'
+    ? 'Muitas tentativas. Espere alguns minutos.'
+    : 'Muitos acessos. Espere um instante.';
+  return res.status(429).json({ erro: mensagem });
+}
+
+function conferirOrigem(req, res, next) {
+  if (!acesso.origemPermitida(req)) return res.status(403).json({ erro: 'Origem recusada.' });
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+  if (!acesso.origemConfiavel(req)) return res.status(403).json({ erro: 'Origem recusada.' });
+  next();
+}
+
+function limparEntrada(valor, profundidade) {
+  if (profundidade > 6) throw falha('JSON profundo demais.');
+  if (valor == null || typeof valor === 'boolean') return valor;
+  if (typeof valor === 'number') {
+    if (!Number.isFinite(valor)) throw falha('Número inválido.');
+    return valor;
+  }
+  if (typeof valor === 'string') return valor;
+  if (Array.isArray(valor)) {
+    if (valor.length > 40) throw falha('Lista grande demais.');
+    return valor.map((item) => limparEntrada(item, profundidade + 1));
+  }
+  if (typeof valor === 'object') {
+    const saida = {};
+    for (const chave of Object.keys(valor)) {
+      if (chave.startsWith('$') || chave.includes('.') || chave === '__proto__' || chave === 'constructor' || chave === 'prototype') {
+        throw falha('Campo inválido.');
+      }
+      saida[chave] = limparEntrada(valor[chave], profundidade + 1);
+    }
+    return saida;
+  }
+  throw falha('Campo inválido.');
+}
+
+function corpoJson(req, res, next) {
+  if (req.method !== 'POST' && req.method !== 'PUT') return next();
+  if (!req.is('application/json')) return res.status(415).json({ erro: 'Envie JSON.' });
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    return res.status(400).json({ erro: 'Envie um objeto JSON.' });
+  }
+  try {
+    req.body = limparEntrada(req.body, 0);
+  } catch (err) {
+    return sendError(res, err);
+  }
+  next();
+}
+
+function exigirSessao(req, res, next) {
+  if (!acesso.sessaoValida(config.sessionSecret, config.senha, acesso.cookie(req, 'ca_sessao'))) {
+    return res.status(401).json({ erro: 'Entre para continuar.' });
+  }
+  next();
+}
+
+let conexao = null;
+function comTempo(promessa, ms, mensagem) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(mensagem)), ms);
+    Promise.resolve(promessa).then((valor) => {
+      clearTimeout(timer);
+      resolve(valor);
+    }, (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}
+function prepararEsquema() {
+  return comTempo(Promise.all([
+    Endereco.syncIndexes(),
+    Regiao.syncIndexes(),
+    Vendedor.syncIndexes(),
+    Cliente.syncIndexes(),
+    Produto.syncIndexes(),
+    Pedido.syncIndexes()
+  ]), 20000, 'A sincronização dos índices demorou demais.').then(() => {
+    return comTempo(aplicarValidadores(mongoose.connection.db), 20000, 'Os validadores do banco demoraram demais.');
+  });
+}
+function garantirBanco() {
+  if (mongoose.connection.readyState === 1) return Promise.resolve();
+  if (!conexao) {
+    conexao = mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 8000, maxPoolSize: 5 }).then(() => {
+      prepararEsquema().catch((err) => console.error('Aviso:', redigir(err && err.message)));
+    }).catch((err) => {
+      conexao = null;
+      throw err;
+    });
+  }
+  return conexao;
 }
 
 function idValido(id) {
@@ -118,18 +242,18 @@ function formato(doc, campoId) {
 }
 
 async function listarEnderecos() {
-  const enderecos = await Endereco.find().sort({ cidade: 1, logradouro: 1 }).lean();
+  const enderecos = await Endereco.find().sort({ cidade: 1, logradouro: 1 }).limit(1000).lean();
   return enderecos.map((item) => formato(item, 'id_endereco'));
 }
 
 async function listarRegioes() {
-  const regioes = await Regiao.find().sort({ nome_regiao: 1 }).lean();
+  const regioes = await Regiao.find().sort({ nome_regiao: 1 }).limit(1000).lean();
   return regioes.map((item) => formato(item, 'id_regiao'));
 }
 
 async function listarVendedores() {
   const [vendedores, enderecos, regioes] = await Promise.all([
-    Vendedor.find().sort({ nome: 1 }).lean(),
+    Vendedor.find().sort({ nome: 1 }).limit(1000).lean(),
     Endereco.find().lean(),
     Regiao.find().lean()
   ]);
@@ -145,7 +269,7 @@ async function listarVendedores() {
 
 async function listarClientes() {
   const [clientes, enderecos] = await Promise.all([
-    Cliente.find().sort({ nome: 1 }).lean(),
+    Cliente.find().sort({ nome: 1 }).limit(1000).lean(),
     Endereco.find().lean()
   ]);
   const enderecoPorId = new Map(enderecos.map((item) => [idDe(item._id), formato(item, 'id_endereco')]));
@@ -157,12 +281,32 @@ async function listarClientes() {
 }
 
 async function listarProdutos() {
-  const produtos = await Produto.find().sort({ nome: 1 }).lean();
+  const produtos = await Produto.find().sort({ nome: 1 }).limit(1000).lean();
   return produtos.map((item) => formato(item, 'id_produto'));
 }
 
-async function listarPedidos() {
-  const pedidos = await Pedido.find().sort({ data_pedido: -1, _id: -1 }).lean();
+function lerDiaFiltro(valor, nome) {
+  if (valor == null || valor === '') return null;
+  if (Array.isArray(valor) || typeof valor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    throw falha(nome + ' inválida. Use AAAA-MM-DD.');
+  }
+  const ano = Number(valor.slice(0, 4));
+  const mes = Number(valor.slice(5, 7));
+  const dia = Number(valor.slice(8, 10));
+  const data = new Date(Date.UTC(ano, mes - 1, dia, 12, 0, 0));
+  const real = data.getUTCFullYear() === ano && data.getUTCMonth() === mes - 1 && data.getUTCDate() === dia;
+  if (!real || valor < '2000-01-01' || valor > '2100-12-31') throw falha(nome + ' inválida.');
+  return data;
+}
+
+async function listarPedidos(de, ate) {
+  const filtro = {};
+  if (de || ate) {
+    filtro.data_pedido = {};
+    if (de) filtro.data_pedido.$gte = de;
+    if (ate) filtro.data_pedido.$lte = ate;
+  }
+  const pedidos = await Pedido.find(filtro).sort({ data_pedido: -1, _id: -1 }).limit(1000).lean();
   return pedidos.map((item) => formato(item, 'id_pedido'));
 }
 
@@ -178,6 +322,14 @@ function dadosEndereco(body) {
   };
 }
 
+async function liberarEndereco(id) {
+  if (!id) return;
+  const empresas = await Cliente.countDocuments({ id_endereco: id });
+  const vendedores = await Vendedor.countDocuments({ id_endereco: id });
+  if (empresas || vendedores) return;
+  await Endereco.findByIdAndDelete(id);
+}
+
 async function criarOuAtualizarEndereco(body, idAtual) {
   const dados = dadosEndereco(body);
   if (idAtual) {
@@ -190,9 +342,105 @@ async function criarOuAtualizarEndereco(body, idAtual) {
   return Endereco.create(dados);
 }
 
-app.get('/api/health', (req, res) => {
-  const conectado = mongoose.connection.readyState === 1;
-  res.status(conectado ? 200 : 503).json({ ok: conectado });
+app.post('/api/entrar', async (req, res) => {
+  try {
+    const ok = await acesso.senhaConfere(config.senha, req.body.senha);
+    if (!ok) return res.status(401).json({ erro: 'Senha incorreta.' });
+    acesso.definirSessao(res, req, config.sessionSecret, config.senha);
+    res.json({ ok: true });
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+app.post('/api/sair', (req, res) => {
+  acesso.limparSessao(res, req);
+  res.json({ ok: true });
+});
+
+app.get('/api/health', async (req, res) => {
+  try {
+    await garantirBanco();
+    res.json({ ok: mongoose.connection.readyState === 1 });
+  } catch (err) {
+    console.error(redigir(err && err.message));
+    res.status(503).json({ ok: false });
+  }
+});
+
+app.use('/api', exigirSessao);
+app.use('/api', async (req, res, next) => {
+  try {
+    await garantirBanco();
+    next();
+  } catch (err) {
+    console.error(redigir(err && err.message));
+    res.status(503).json({ erro: 'Banco indisponível.' });
+  }
+});
+
+app.get('/api/sessao', (req, res) => {
+  res.json({ ok: true });
+});
+
+function resumir(lista) {
+  const texto = JSON.stringify(lista, (_chave, valor) => {
+    if (valor && typeof valor.toHexString === 'function') return valor.toHexString();
+    if (valor instanceof Date) return valor.toISOString();
+    return valor;
+  });
+  return crypto.createHash('sha256').update(texto).digest('base64url').slice(0, 16);
+}
+
+app.get('/api/versao', async (req, res) => {
+  try {
+    const [enderecos, regioes, vendedores, clientes, produtos, pedidos] = await Promise.all([
+      Endereco.find().select('cep logradouro numero complemento bairro cidade estado').sort({ _id: 1 }).lean(),
+      Regiao.find().select('nome_regiao').sort({ _id: 1 }).lean(),
+      Vendedor.find().select('nome cpf telefone email id_endereco id_regiao').sort({ _id: 1 }).lean(),
+      Cliente.find().select('nome cnpj telefone id_endereco').sort({ _id: 1 }).lean(),
+      Produto.find().select('nome descricao preco').sort({ _id: 1 }).lean(),
+      Pedido.find().select('data_pedido perc_comissao id_cliente id_vendedor itens').sort({ _id: 1 }).lean()
+    ]);
+    res.json({ v: [enderecos, regioes, vendedores, clientes, produtos, pedidos].map(resumir).join('.') });
+  } catch (err) { sendError(res, err); }
+});
+
+app.get('/api/consulta-cnpj/:cnpj', async (req, res) => {
+  try {
+    const cnpj = doc.onlyDigits(req.params.cnpj);
+    if (!doc.cnpjValido(cnpj)) throw falha('CNPJ inválido.');
+    let resposta;
+    try {
+      resposta = await fetch('https://brasilapi.com.br/api/cnpj/v1/' + cnpj, {
+        headers: { Accept: 'application/json', 'User-Agent': 'central-de-ar' },
+        signal: AbortSignal.timeout(8000)
+      });
+    } catch {
+      throw falha('A consulta pública do CNPJ não respondeu. Preencha os dados manualmente.', 502);
+    }
+    if (resposta.status === 404) throw falha('CNPJ não encontrado no cadastro público.', 404);
+    if (!resposta.ok) throw falha('A consulta pública do CNPJ não respondeu. Preencha os dados manualmente.', 502);
+    const tipo = resposta.headers.get('content-type') || '';
+    if (!tipo.includes('json')) throw falha('A consulta pública do CNPJ não respondeu. Preencha os dados manualmente.', 502);
+    const bruto = await resposta.text();
+    if (bruto.length > 1000000) throw falha('A consulta pública do CNPJ não respondeu. Preencha os dados manualmente.', 502);
+    let dados;
+    try { dados = JSON.parse(bruto); }
+    catch { throw falha('A consulta pública do CNPJ não respondeu. Preencha os dados manualmente.', 502); }
+    const telefone = doc.onlyDigits(dados.ddd_telefone_1);
+    res.json({
+      nome: doc.cleanName(dados.razao_social || dados.nome_fantasia || '').slice(0, 100),
+      telefone: telefone.length === 11 && telefone[2] === '9' ? telefone : '',
+      cep: doc.onlyDigits(dados.cep).slice(0, 8),
+      logradouro: doc.cleanName(dados.logradouro || '').slice(0, 120),
+      numero: String(dados.numero || '').trim().slice(0, 10),
+      complemento: doc.cleanName(dados.complemento || '').slice(0, 50),
+      bairro: doc.cleanName(dados.bairro || '').slice(0, 60),
+      cidade: doc.cleanName(dados.municipio || '').slice(0, 60),
+      estado: String(dados.uf || '').trim().toUpperCase()
+    });
+  } catch (err) { sendError(res, err); }
 });
 
 app.get('/api/enderecos', async (req, res) => {
@@ -316,7 +564,9 @@ app.delete('/api/vendedores/:id', async (req, res) => {
     if (!vendedor) throw falha('Vendedor não encontrado.', 404);
     const pedidos = await Pedido.countDocuments({ id_vendedor: vendedor._id });
     if (pedidos) throw falha('Este vendedor tem pedidos. Apague esses pedidos antes, para a comissão não sumir sem querer.', 409);
+    const enderecoId = vendedor.id_endereco;
     await vendedor.deleteOne();
+    await liberarEndereco(enderecoId);
     res.json({ mensagem: 'Vendedor removido.' });
   } catch (err) { sendError(res, err); }
 });
@@ -364,7 +614,9 @@ app.delete('/api/clientes/:id', async (req, res) => {
     if (!cliente) throw falha('Empresa não encontrada.', 404);
     const pedidos = await Pedido.countDocuments({ id_cliente: cliente._id });
     if (pedidos) throw falha('Esta empresa tem pedidos. Apague esses pedidos antes, para o histórico não sumir sem querer.', 409);
+    const enderecoId = cliente.id_endereco;
     await cliente.deleteOne();
+    await liberarEndereco(enderecoId);
     res.json({ mensagem: 'Empresa removida.' });
   } catch (err) { sendError(res, err); }
 });
@@ -410,7 +662,12 @@ app.delete('/api/produtos/:id', async (req, res) => {
 });
 
 app.get('/api/pedidos', async (req, res) => {
-  try { res.json(await listarPedidos()); } catch (err) { sendError(res, err); }
+  try {
+    const de = lerDiaFiltro(req.query.de, 'Data inicial');
+    const ate = lerDiaFiltro(req.query.ate, 'Data final');
+    if (de && ate && de > ate) throw falha('A data inicial está depois da final.');
+    res.json(await listarPedidos(de, ate));
+  } catch (err) { sendError(res, err); }
 });
 
 app.post('/api/pedidos', async (req, res) => {
@@ -429,6 +686,7 @@ app.post('/api/pedidos', async (req, res) => {
     const vistos = new Set();
     const itens = [];
     for (const item of req.body.itens) {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) throw falha('Há um produto inválido no pedido.');
       if (!idValido(item.id_produto)) throw falha('Há um produto inválido no pedido.');
       const chave = String(item.id_produto);
       if (vistos.has(chave)) throw falha('Não repita o mesmo produto. Aumente a quantidade na linha que já existe.');
@@ -468,28 +726,38 @@ app.delete('/api/pedidos/:id', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(path.join(__dirname, 'frontend.html'));
 });
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: 0 }));
 
-async function iniciar() {
-  await mongoose.connect(config.mongoUri, { serverSelectionTimeoutMS: 15000 });
-  await Promise.all([
-    Endereco.syncIndexes(),
-    Regiao.syncIndexes(),
-    Vendedor.syncIndexes(),
-    Cliente.syncIndexes(),
-    Produto.syncIndexes(),
-    Pedido.syncIndexes()
-  ]);
-  await aplicarValidadores(mongoose.connection.db);
-  app.listen(config.port, () => {
-    console.log(`Servidor Backend rodando na porta ${config.port}`);
-    console.log('Conectado ao MongoDB com sucesso!');
+function tentarBanco() {
+  garantirBanco().then(() => {
+    console.log('Conectado ao MongoDB.');
+  }).catch((err) => {
+    console.error('Banco indisponível:', redigir(err && err.message));
+    console.error('O site continua no ar. Nova tentativa em 5 segundos.');
+    setTimeout(tentarBanco, 5000);
   });
 }
 
-iniciar().catch((err) => {
-  console.error('Falha ao iniciar:', err.message);
-  process.exit(1);
-});
+function iniciar() {
+  const servidor = app.listen(config.port, () => {
+    console.log(`Servidor na porta ${config.port}`);
+    console.log('Abrindo o banco...');
+  });
+  servidor.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`A porta ${config.port} já está em uso. Feche a outra janela do servidor e rode npm start de novo.`);
+    } else {
+      console.error('Falha ao abrir a porta:', err.message);
+    }
+    process.exit(1);
+  });
+  tentarBanco();
+}
+
+if (require.main === module) {
+  iniciar();
+}
+
+module.exports = app;

@@ -2,8 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0e2a4a">
+<meta name="robots" content="noindex, nofollow">
 <title>Central de Ar · Vendas</title>
 <style>
 :root {
@@ -42,6 +43,8 @@ button { cursor: pointer; }
   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
 }
 .app { display: flex; flex-direction: column; min-height: 100vh; }
+.mast .btn.ghost { color: #e8f1fb; border-color: rgba(255,255,255,.28); background: transparent; }
+.mast .btn.ghost:hover { background: rgba(255,255,255,.08); }
 .mast {
   display: flex; align-items: center; justify-content: space-between;
   height: 64px; padding: 0 22px;
@@ -204,40 +207,116 @@ legend { padding: 0 6px; font-size: 13px; font-weight: 750; color: #0e2a4a; }
 .toast { background: #0e2a4a; color: white; padding: 12px 14px; border-radius: 12px; max-width: 340px; box-shadow: 0 12px 28px rgba(14, 42, 74, 0.28); }
 .toast.bad { background: var(--danger); }
 .offline { max-width: 520px; margin: 12vh auto; background: #fff; padding: 22px; border: 1px solid var(--line); border-radius: 16px; }
+.login { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 16px; background: rgba(14, 42, 74, 0.28); }
+.login form { width: min(420px, 100%); background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px; box-shadow: 0 16px 40px rgba(14, 42, 74, 0.16); }
+.login h2 { margin: 8px 0 4px; }
+.login p { margin: 0 0 14px; color: var(--muted); }
+.login input { width: 100%; height: 42px; border: 1px solid #d3dfec; border-radius: 12px; padding: 0 12px; }
 .offline h2 { font-weight: 720; }
 code { font-family: Consolas, monospace; font-size: .95em; }
 @media (max-width: 1100px) { .kpis, .grid-2 { grid-template-columns: 1fr 1fr; } .side-note { display: none; } }
 @media (max-width: 860px) {
-  .menu-btn { display: inline-grid; }
-  .menubar { padding: 8px; }
-  .nav { display: none; position: static; width: 100%; flex-direction: column; align-items: stretch; background: #fff; }
-  body.nav-open .nav { display: flex; }
-  .main { padding: 14px; }
-  .top, .top-actions, .dates { flex-wrap: wrap; }
-  .top-actions, .dates, .search, .search input, .dates input { width: 100%; }
-  .kpis, .grid-2, .grid { grid-template-columns: 1fr; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { touch-action: manipulation; }
+  .menu-btn { display: none; }
+  .mast {
+    height: auto; min-height: 56px; gap: 10px;
+    padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+  }
+  .brand h1 { font-size: 16px; }
+  .brand p { display: none; }
+  .status-dot { width: 10px; height: 10px; font-size: 0; gap: 0; }
+  .status-dot i { width: 10px; height: 10px; }
+  .mast .btn { min-height: 40px; height: 40px; padding: 0 14px; }
+  .menubar { padding: 8px 10px; }
+  .brand { min-width: 0; }
+  .brand h1 { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nav {
+    display: flex; flex-direction: row; align-items: center;
+    overflow-x: auto; gap: 6px; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 22px), transparent);
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav button { min-height: 44px; padding: 8px 14px; }
+  .main { padding: 12px 12px calc(24px + env(safe-area-inset-bottom)); }
+  .top { flex-wrap: wrap; align-items: stretch; }
+  .top h2 { font-size: 22px; }
+  .top-actions, .dates { flex-direction: column; align-items: stretch; width: 100%; gap: 8px; }
+  .search, .search input, .dates, #pageAction, #pageAction .btn { width: 100%; }
+  #pageAction .btn { justify-content: center; height: 48px; }
+  .dates label { width: 100%; height: auto; }
+  .dates input { flex: 1; width: auto; min-width: 0; }
+  .search input, .dates input, .field input, .field select, .field textarea,
+  .login input, .item-row input, .item-row select, .panel-head select, .money input { font-size: 16px; min-height: 44px; }
+  .field textarea { min-height: 96px; }
+  .login { padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); }
+  .login .btn { width: 100%; justify-content: center; height: 48px; }
+  .kpis { grid-template-columns: 1fr 1fr; }
+  .grid-2, .grid { grid-template-columns: 1fr; }
+  .kpi strong { font-size: 20px; overflow-wrap: anywhere; }
+  .panel-head { flex-wrap: wrap; align-items: stretch; }
+  .panel-head select { width: 100%; border: 1px solid #d3dfec; border-radius: 12px; padding: 0 12px; background: #fff; }
   .s1, .s2, .s3, .s4, .s5, .s6 { grid-column: auto; }
   .item-row { grid-template-columns: 1fr 1fr; }
+  .item-row .item-prod { grid-column: 1 / -1; }
+  .item-row .line-total { text-align: left; }
+  .item-row .icon-btn { justify-self: end; }
+  .icon-btn { width: 44px; height: 44px; }
+  .modal { padding: 0; align-items: end; }
+  .dialog, .dialog.wide, .dialog.sm {
+    width: 100%; max-height: 92dvh; overscroll-behavior: contain;
+    border-radius: 18px 18px 0 0;
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  }
+  .dialog-actions { flex-direction: column; align-items: stretch; }
+  .dialog-actions > div { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .dialog-actions .btn { width: 100%; justify-content: center; height: 48px; }
   table.resp thead { display: none; }
-  table.resp tr { display: block; border: 1px solid var(--line); border-radius: 12px; margin: 8px; background: white; }
-  table.resp td { display: flex; justify-content: space-between; gap: 12px; border: 0; }
-  table.resp td::before { content: attr(data-label); color: var(--muted); font-size: 11px; }
-  table.resp td.actions { justify-content: flex-end; }
-  table.resp td.actions::before { display: none; }
+  table.resp tr { display: block; border: 1px solid var(--line); border-radius: 14px; margin: 8px; background: #fff; overflow: hidden; }
+  table.resp td {
+    display: grid; grid-template-columns: minmax(92px, 38%) minmax(0, 1fr);
+    align-items: start; gap: 12px; border: 0; border-bottom: 1px solid #eef3f8; padding: 12px 14px;
+  }
+  table.resp tr td:last-child { border-bottom: 0; }
+  table.resp td::before { content: attr(data-label); color: #6d84a3; font-size: 11px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
+  table.resp td .cell { min-width: 0; text-align: right; overflow-wrap: anywhere; }
+  table.resp td.actions { display: flex; justify-content: flex-end; }
+  table.resp td.actions::before, table.resp tr.detail td::before { content: none; }
+  table.resp tr.detail td { display: block; }
+  table.resp .sub { text-align: right; }
+  table.resp tr.detail td .cell { text-align: left; }
+  #toasts { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .toast { max-width: none; }
+}
+@media (max-width: 420px) {
+  .kpis { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
 </style>
 </head>
 <body>
+<div id="login" class="login" hidden>
+  <form id="loginForm">
+    <div class="mark" aria-hidden="true">CA</div>
+    <h2>Entrar</h2>
+    <p>O painel só abre com a senha do sistema.</p>
+    <label class="field">Senha
+      <input id="loginSenha" type="password" autocomplete="current-password" maxlength="200" required>
+    </label>
+    <p id="loginErro" class="msg bad"></p>
+    <button class="btn" type="submit">Entrar</button>
+  </form>
+</div>
 <div class="backdrop" data-action="close-nav" hidden></div>
-<div class="app">
+<div class="app" hidden>
   <header class="mast">
     <div class="brand">
       <div class="mark" aria-hidden="true">CA</div>
       <div><h1>Central de Ar</h1><p>Vendas</p></div>
     </div>
     <div class="status-dot"><i></i> Conectado ao banco</div>
+    <button class="btn ghost small" type="button" id="sair">Sair</button>
   </header>
   <div class="menubar">
     <nav class="nav" id="nav"></nav>
@@ -282,9 +361,7 @@ code { font-family: Consolas, monospace; font-size: .95em; }
 </div>
 <div id="toasts" aria-live="polite"></div>
 <script>
-const API = (location.protocol === 'file:' || (location.port && location.port !== '3000'))
-  ? 'http://localhost:3000/api'
-  : location.origin + '/api';
+const API = location.origin + '/api';
 
 const UFS = ['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'];
 const DDDS = new Set('11 12 13 14 15 16 17 18 19 21 22 24 27 28 31 32 33 34 35 37 38 41 42 43 44 45 46 47 48 49 51 53 54 55 61 62 63 64 65 66 67 68 69 71 73 74 75 77 79 81 82 83 84 85 86 87 88 89 91 92 93 94 95 96 97 98 99'.split(' '));
@@ -297,6 +374,7 @@ const state = {
   pedidoAberto: '',
   editing: null,
   saving: false,
+  versaoVista: '',
   confirm: null,
   enderecos: [], regioes: [], vendedores: [], clientes: [], produtos: [], pedidos: []
 };
@@ -409,11 +487,25 @@ function byId(lista, campo, id) {
 function pedidoTotal(pedido) {
   return (pedido.itens || []).reduce((soma, item) => soma + Number(item.quantidade) * Number(item.preco_unitario), 0);
 }
+function diaIso(valor) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(valor || '')) ? String(valor) : '';
+}
+function caminhoPedidos() {
+  const params = new URLSearchParams();
+  const inicio = diaIso(state.dateStart);
+  const fim = diaIso(state.dateEnd);
+  if (inicio) params.set('de', inicio);
+  if (fim) params.set('ate', fim);
+  const busca = params.toString();
+  return '/pedidos' + (busca ? '?' + busca : '');
+}
 function pedidosFiltrados() {
+  const inicio = diaIso(state.dateStart);
+  const fim = diaIso(state.dateEnd);
   return state.pedidos.filter((pedido) => {
     const dia = dayKey(pedido.data_pedido);
-    if (state.dateStart && dia < state.dateStart) return false;
-    if (state.dateEnd && dia > state.dateEnd) return false;
+    if (inicio && dia < inicio) return false;
+    if (fim && dia > fim) return false;
     return true;
   });
 }
@@ -437,11 +529,33 @@ function toast(message, type) {
   setTimeout(() => el.remove(), 5200);
 }
 
+function mostrarLogin() {
+  const painel = document.querySelector('.app');
+  const tela = document.getElementById('login');
+  if (painel) painel.hidden = true;
+  if (tela) tela.hidden = false;
+}
+function mostrarApp() {
+  document.getElementById('login').hidden = true;
+  document.querySelector('.app').hidden = false;
+}
+function limparPainel() {
+  state.enderecos = [];
+  state.regioes = [];
+  state.vendedores = [];
+  state.clientes = [];
+  state.produtos = [];
+  state.pedidos = [];
+  const view = document.getElementById('view');
+  if (view) view.innerHTML = '';
+}
 async function api(path, method, body) {
   let res;
   try {
     res = await fetch(API + path, {
       method: method || 'GET',
+      credentials: 'same-origin',
+      cache: 'no-store',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: body ? JSON.stringify(body) : undefined
     });
@@ -453,19 +567,33 @@ async function api(path, method, body) {
   if (text) {
     try { data = JSON.parse(text); } catch { throw new Error('O servidor respondeu de um jeito inesperado.'); }
   }
-  if (!res.ok) throw new Error(data.erro || 'Não foi possível concluir.');
+  if (res.status === 401 && path !== '/entrar') {
+    mostrarLogin();
+    const erro = new Error(data.erro || 'Entre para continuar.');
+    erro.status = 401;
+    throw erro;
+  }
+  if (!res.ok) {
+    const erro = new Error(data.erro || 'Não foi possível concluir.');
+    erro.status = res.status;
+    throw erro;
+  }
   return data;
 }
 
 async function reload() {
   const [enderecos, regioes, vendedores, clientes, produtos, pedidos] = await Promise.all([
-    api('/enderecos'), api('/regioes'), api('/vendedores'), api('/clientes'), api('/produtos'), api('/pedidos')
+    api('/enderecos'), api('/regioes'), api('/vendedores'), api('/clientes'), api('/produtos'), api(caminhoPedidos())
   ]);
   Object.assign(state, { enderecos, regioes, vendedores, clientes, produtos, pedidos });
   if (!state.regiaoRelatorio && regioes[0]) {
     const comEmpresa = regioes.find((regiao) => clientes.some((cliente) => cliente.endereco && norm(cliente.endereco.cidade) === norm(regiao.nome_regiao)));
     state.regiaoRelatorio = (comEmpresa || regioes[0]).id_regiao;
   }
+  try {
+    const remoto = await api('/versao');
+    if (remoto && remoto.v) state.versaoVista = remoto.v;
+  } catch { /* a próxima verificação busca de novo */ }
 }
 
 function renderNav() {
@@ -487,12 +615,18 @@ function renderNav() {
     ['regioes', 'Regiões', state.regioes.length],
     ['enderecos', 'Endereços', state.enderecos.length]
   ];
-  document.getElementById('nav').innerHTML = itens.map(([id, nome, count]) => `
+  const nav = document.getElementById('nav');
+  nav.innerHTML = itens.map(([id, nome, count]) => `
     <button type="button" class="${state.tab === id ? 'active' : ''}" data-action="nav" data-tab="${id}">
       ${icones[id]}
       <span class="name">${nome}</span>
       ${count === '' ? '' : `<span class="count">${count}</span>`}
     </button>`).join('');
+  const ativo = nav.querySelector('.active');
+  if (ativo) {
+    const esquerda = ativo.offsetLeft - (nav.clientWidth - ativo.offsetWidth) / 2;
+    nav.scrollTo({ left: Math.max(0, esquerda) });
+  }
 }
 
 function render() {
@@ -513,7 +647,7 @@ function table(headers, rows, emptyTitle, emptyText) {
   return `<table class="resp"><thead><tr>${headers.map((h) => `<th class="${h.num ? 'num' : ''}">${esc(h.label)}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
 }
 function cells(valores) {
-  return valores.map((valor) => `<td class="${valor.num ? 'num' : ''} ${valor.cls || ''}" data-label="${attr(valor.label)}">${valor.html}</td>`).join('');
+  return valores.map((valor) => `<td class="${valor.num ? 'num' : ''} ${valor.cls || ''}" data-label="${attr(valor.label)}"><div class="cell">${valor.html}</div></td>`).join('');
 }
 
 function renderDashboard() {
@@ -634,7 +768,7 @@ function renderPedidos() {
         const produto = byId(state.produtos, 'id_produto', item.id_produto);
         return `<div>${esc(produto ? produto.nome : 'Produto')} · ${item.quantidade} \u00b7 ${formatBRL(item.preco_unitario)}</div>`;
       }).join('');
-      rows.push(`<tr class="detail" data-filter="${attr(filtro)}"><td colspan="6">${linhas || 'Pedido sem itens.'}</td></tr>`);
+      rows.push(`<tr class="detail" data-filter="${attr(filtro)}"><td colspan="6" data-label="Itens"><div class="cell">${linhas || 'Pedido sem itens.'}</div></td></tr>`);
     }
   });
   return `<section class="panel">${table(
@@ -759,13 +893,14 @@ function closeModal() {
   document.getElementById('modal').hidden = true;
   document.getElementById('modalForm').innerHTML = '';
   state.editing = null;
+  if (state.desenhoPendente) sincronizar();
 }
 
 function openCliente(id) {
   const cliente = id ? byId(state.clientes, 'id_cliente', id) : null;
   state.editing = { type: 'clientes', id: id || null };
   showModal('Empresas', cliente ? 'Editar empresa' : 'Nova empresa', `
-    <p class="help">A máscara do CNPJ entra enquanto você digita. O cadastro só salva com 18 caracteres e dígitos verdadeiros.</p>
+    <p class="help">Quando o CNPJ fica completo, a razão social e o endereço vêm do cadastro público da empresa. Confira antes de salvar.</p>
     <fieldset><legend>Dados da empresa</legend><div class="grid">
       ${field({ id: 'f-nome', cls: 's6', label: 'Razão social', req: true, control: input('f-nome', cliente && cliente.nome, 'maxlength="100" autocomplete="organization" required') })}
       ${field({ id: 'f-cnpj', cls: 's3', label: 'CNPJ', req: true, max: 18, hint: 'Formato 00.000.000/0000-00', control: input('f-cnpj', cliente && cliente.cnpj, 'inputmode="numeric" maxlength="18" autocomplete="off" required') })}
@@ -778,6 +913,7 @@ function openCliente(id) {
   bindMask(document.getElementById('f-telefone'), maskPhone, 15);
   watchDoc('f-cnpj', (value) => erroCnpj(value, state.editing && state.editing.id));
   watchDoc('f-telefone', erroTelefone);
+  bindConsultaCnpj();
   bindEndereco();
 }
 function openVendedor(id) {
@@ -898,6 +1034,54 @@ function bindEndereco() {
     if (cep.length !== 8) return;
     timer = setTimeout(() => buscarCep(cep), 200);
   });
+}
+function bindConsultaCnpj() {
+  const el = document.getElementById('f-cnpj');
+  let timer;
+  let ultimo = '';
+  el.addEventListener('masked', () => {
+    clearTimeout(timer);
+    const valor = el.value;
+    if (erroCnpj(valor, state.editing && state.editing.id)) return;
+    const pedido = digits(valor);
+    if (pedido === ultimo) return;
+    ultimo = pedido;
+    timer = setTimeout(() => consultarCnpj(pedido), 250);
+  });
+}
+function preencherSe(id, valor) {
+  const el = document.getElementById(id);
+  if (!el || valor == null || valor === '') return;
+  el.value = valor;
+  const counter = document.getElementById(id + '-count');
+  if (counter && el.maxLength > 0) counter.textContent = el.value.length + '/' + el.maxLength;
+}
+async function consultarCnpj(pedido) {
+  const msg = document.getElementById('f-cnpj-msg');
+  if (!msg) return;
+  msg.className = 'msg';
+  msg.textContent = 'Buscando dados do CNPJ...';
+  try {
+    const data = await api('/consulta-cnpj/' + pedido);
+    if (!document.getElementById('f-cnpj') || digits(document.getElementById('f-cnpj').value) !== pedido) return;
+    if (data.nome) document.getElementById('f-nome').value = data.nome;
+    const telefone = maskPhone(data.telefone || '');
+    if (telefoneCompleto(telefone)) preencherSe('f-telefone', telefone);
+    const cep = maskCEP(data.cep || '');
+    if (cep.length === 9) preencherSe('f-cep', cep);
+    preencherSe('f-logradouro', data.logradouro);
+    if (/^[\p{L}0-9./-]{1,10}$/u.test(data.numero || '')) preencherSe('f-numero', data.numero);
+    preencherSe('f-complemento', data.complemento);
+    preencherSe('f-bairro', data.bairro);
+    preencherSe('f-cidade', data.cidade);
+    if (UFS.includes(data.estado)) preencherSe('f-estado', data.estado);
+    msg.className = 'msg good';
+    msg.textContent = data.nome ? 'Dados públicos do CNPJ preenchidos. Confira antes de salvar.' : 'CNPJ encontrado, sem razão social. Preencha o nome.';
+  } catch (err) {
+    if (!document.getElementById('f-cnpj') || digits(document.getElementById('f-cnpj').value) !== pedido) return;
+    msg.className = 'msg';
+    msg.textContent = err.message || 'Não encontrei esse CNPJ. Preencha a razão social.';
+  }
 }
 async function buscarCep(cep) {
   const msg = document.getElementById('f-cep-msg');
@@ -1132,8 +1316,8 @@ async function savePedido() {
 async function removeRecord(entity, id, name) {
   const texto = {
     pedidos: `Apagar o pedido de ${name}? O histórico desta venda sai do banco.`,
-    clientes: `Apagar a empresa ${name}? Se ela tiver pedidos, o banco não deixa.`,
-    vendedores: `Apagar o vendedor ${name}? Se ele tiver pedidos, o banco não deixa.`,
+    clientes: `Apagar a empresa ${name}? Se ela tiver pedidos, o banco não deixa. O endereço dela sai junto, se ninguém mais o usar.`,
+    vendedores: `Apagar o vendedor ${name}? Se ele tiver pedidos, o banco não deixa. O endereço dele sai junto, se ninguém mais o usar.`,
     produtos: `Apagar o produto ${name}? Se ele já foi vendido, o banco não deixa.`,
     regioes: `Apagar a região ${name}? Se houver um vendedor nela, o banco não deixa.`,
     enderecos: `Apagar este endereço? Se alguém o estiver usando, o banco não deixa.`
@@ -1160,12 +1344,15 @@ function closeConfirm(answer) {
   document.getElementById('confirm').hidden = true;
   if (state.confirm) state.confirm(answer);
   state.confirm = null;
+  if (!answer && state.desenhoPendente) sincronizar();
 }
 
 function renderOffline() {
   if (window.__modoJogo && document.getElementById('dino')) return;
   window.__modoJogo = true;
-  document.body.innerHTML = '<div id="dinoPage" style="position:fixed;inset:0;background:#f7f7f7;overflow:hidden"><canvas id="dino"></canvas><p id="dinoHint" style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);margin:0;font:600 16px Segoe UI,sans-serif;color:#535353;pointer-events:none;text-align:center">Sem conexão com o banco<br>Pressione espaço para jogar</p></div>';
+  const toque = window.matchMedia('(pointer: coarse)').matches;
+  const dica = toque ? 'Toque na tela para jogar' : 'Pressione espaço para jogar';
+  document.body.innerHTML = '<div id="dinoPage" style="position:fixed;inset:0;background:#f7f7f7;overflow:hidden"><canvas id="dino"></canvas><p id="dinoHint" style="position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);margin:0;font:600 16px Segoe UI,sans-serif;color:#535353;pointer-events:none;text-align:center;padding:0 24px">Sem conexão com o banco<br>' + dica + '</p></div>';
   iniciarCorrida();
 }
 
@@ -1313,9 +1500,42 @@ function iniciarCorrida() {
   quadroJogo();
 }
 
+function painelVisivel() {
+  const app = document.querySelector('.app');
+  return Boolean(app && !app.hidden && !window.__modoJogo && !document.hidden);
+}
+function telaOcupada() {
+  const modal = document.getElementById('modal');
+  const confirmacao = document.getElementById('confirm');
+  return state.saving || (modal && !modal.hidden) || (confirmacao && !confirmacao.hidden);
+}
+let sincronizando = false;
+async function sincronizar() {
+  if (sincronizando || !painelVisivel()) return;
+  if (telaOcupada()) return;
+  sincronizando = true;
+  try {
+    const remoto = await api('/versao');
+    const v = remoto && remoto.v;
+    if (!v || (v === state.versaoVista && !state.desenhoPendente)) return;
+    if (telaOcupada()) { state.desenhoPendente = true; return; }
+    await reload();
+    if (telaOcupada()) { state.desenhoPendente = true; return; }
+    state.desenhoPendente = false;
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+    toast('A lista foi atualizada.');
+  } catch (err) {
+    if (err && err.status === 401) return;
+  } finally {
+    sincronizando = false;
+  }
+}
+
 async function vigiarConexao() {
   try {
-    const resposta = await fetch(API + '/health', { cache: 'no-store' });
+    const resposta = await fetch(API + '/health', { cache: 'no-store', credentials: 'same-origin' });
     if (!resposta.ok) throw new Error('sem servidor');
     if (window.__modoJogo) location.reload();
   } catch (err) {
@@ -1348,10 +1568,10 @@ document.body.addEventListener('input', (event) => {
 document.body.addEventListener('change', (event) => {
   if (event.target.id === 'regiaoRelatorio') { state.regiaoRelatorio = event.target.value; render(); }
   if (event.target.id === 'dateStart' || event.target.id === 'dateEnd') {
-    state.dateStart = document.getElementById('dateStart').value;
-    state.dateEnd = document.getElementById('dateEnd').value;
+    state.dateStart = diaIso(document.getElementById('dateStart').value);
+    state.dateEnd = diaIso(document.getElementById('dateEnd').value);
     if (state.dateStart && state.dateEnd && state.dateStart > state.dateEnd) { toast('A data inicial está depois da final.', 'bad'); return; }
-    render();
+    api(caminhoPedidos()).then((pedidos) => { state.pedidos = pedidos; render(); }).catch((err) => toast(err.message, 'bad'));
   }
   if (event.target.classList && event.target.classList.contains('item-prod')) refreshItens();
 });
@@ -1369,14 +1589,47 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-async function boot() {
+document.getElementById('loginForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const erro = document.getElementById('loginErro');
+  erro.textContent = '';
+  const botao = event.target.querySelector('button');
+  botao.disabled = true;
   try {
+    await api('/entrar', 'POST', { senha: document.getElementById('loginSenha').value });
+    document.getElementById('loginSenha').value = '';
+    mostrarApp();
     await reload();
     render();
   } catch (err) {
-    renderOffline();
+    erro.textContent = err.message;
+  } finally {
+    botao.disabled = false;
+  }
+});
+document.getElementById('sair').addEventListener('click', async () => {
+  try { await api('/sair', 'POST', {}); } catch { /* a sessão local sai mesmo assim */ }
+  limparPainel();
+  mostrarLogin();
+});
+
+async function boot() {
+  if (location.protocol === 'file:') {
+    location.replace('http://localhost:3000/');
+    return;
+  }
+  try {
+    await api('/sessao');
+    mostrarApp();
+    await reload();
+    render();
+  } catch (err) {
+    if (err.status === 401) mostrarLogin();
+    else renderOffline();
   }
   setInterval(vigiarConexao, 2000);
+  setInterval(sincronizar, 3000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
 }
 boot();
 </script>

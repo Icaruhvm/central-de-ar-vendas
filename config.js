@@ -26,13 +26,18 @@ function carregarEnv() {
 
 carregarEnv();
 
-const mongoUri = process.env.MONGO_URI;
-if (!mongoUri) {
-  console.error('Defina MONGO_URI. Copie .env.example para .env e coloque a URI do seu MongoDB.');
-  process.exit(1);
+function exigir(nome, minimo) {
+  const valor = process.env[nome] || '';
+  if (valor.length < minimo) {
+    console.error(`Defina ${nome} no ambiente ou no .env, com pelo menos ${minimo} caracteres.`);
+    process.exit(1);
+  }
+  return valor;
 }
 
 module.exports = {
-  mongoUri,
+  mongoUri: exigir('MONGO_URI', 12),
+  senha: exigir('APP_PASSWORD', 8),
+  sessionSecret: exigir('SESSION_SECRET', 32),
   port: Number(process.env.PORT) || 3000
 };
