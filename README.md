@@ -1,94 +1,38 @@
 # Central de Ar — Gestão de Vendas
 
-Painel para uma empresa de climatização acompanhar a venda do começo ao fim: quem atende cada região, quais empresas são clientes, o que está no catálogo e o que já foi pedido.
+Painel comercial de uma empresa de climatização. Acompanha a venda do começo ao fim: quem atende cada região, quais empresas são clientes, o que está no catálogo e o que já foi pedido.
 
-CNPJ e CPF são validados e não podem repetir. O telefone precisa ser celular, com DDD. Cada região fica com um vendedor só. Quando um pedido é fechado, o preço daquele momento fica gravado nele. Se o catálogo mudar depois, o histórico continua o mesmo.
+O site publicado está em [https://central-de-ar.vercel.app](https://central-de-ar.vercel.app). A senha do painel não está neste repositório.
 
-No painel dá para ver o total vendido por região, cliente, vendedor e produto, e também quanto de comissão cada vendedor tem a receber.
+## O que o sistema faz
 
-Feito com Node.js, Express e MongoDB. A tela abre no navegador, servida pela própria API.
+- Cadastro de endereços, regiões, vendedores, empresas e produtos.
+- Pedido com itens, data e percentual de comissão. O preço gravado é o do catálogo naquele momento. Uma alteração posterior no produto não reescreve o histórico.
+- Cada região tem um vendedor só. CNPJ e CPF são validados e não podem repetir. O telefone precisa ser celular, com DDD.
+- Ao apagar uma empresa ou um vendedor, o endereço sai junto se mais ninguém o estiver usando. Um cadastro que ainda tem pedido não é apagado.
+- Painel com total vendido por região, cliente, vendedor e produto, e com a comissão a receber.
+- Consulta de CNPJ em fonte pública para preencher a empresa. O CEP completo busca o logradouro.
+- A lista se atualiza sozinha quando outra pessoa grava um cadastro. Um formulário aberto não é interrompido.
+- No celular, as seções rolam na horizontal, os formulários abrem de baixo para cima e as listas viram cartões.
 
-O painel publicado está em [https://central-de-ar.vercel.app](https://central-de-ar.vercel.app). A senha de acesso fica só nas variáveis de ambiente da Vercel, não neste repositório.
+## Como o código está organizado
 
-## Para rodar
+Node.js e Express servem a página e a API. O MongoDB guarda os cadastros pelo Mongoose. Não há framework de frontend: a interface está em `frontend.html`.
 
-Você vai precisar do [Node.js](https://nodejs.org/) 18 ou mais novo, e de um MongoDB. Pode ser o que está instalado na sua máquina ou um cluster grátis no [MongoDB Atlas](https://www.mongodb.com/atlas).
-
-```bash
-npm install
-copy .env.example .env
-```
-
-No Mac ou no Linux, o segundo comando é `cp .env.example .env`.
-
-Abra o `.env` e preencha a conexão do banco, uma senha sua para entrar no painel (`APP_PASSWORD`, no mínimo 8 caracteres) e uma chave longa e aleatória em `SESSION_SECRET`. A conexão local fica assim:
-
-```text
-MONGO_URI=mongodb://127.0.0.1:27017/central_de_ar
-```
-
-Se for Atlas, fica mais ou menos assim:
-
-```text
-MONGO_URI=mongodb+srv://USUARIO:SENHA@cluster.mongodb.net/central_de_ar
-```
-
-Se a senha tiver `@`, `#` ou `:`, esses caracteres precisam ir codificados na URI, senão a conexão quebra no meio.
-
-O `.env` fica só na sua máquina. Ele já está no `.gitignore`, então a senha não sobe junto com o código. A pasta `node_modules` também não: o `npm install` recria ela.
-
-Depois é só:
-
-```bash
-npm start
-```
-
-Abra [http://localhost:3000](http://localhost:3000). A primeira tela pede a senha do `APP_PASSWORD`. Se deu certo, o terminal avisa a porta e, depois do login, a página mostra **Conectado ao banco**.
-
-## Para testar
-
-O banco começa vazio. O caminho mais rápido é carregar um conjunto de exemplo: regiões do Espírito Santo, vendedores, empresas, produtos e alguns pedidos.
-
-```bash
-npm run seed
-```
-
-Esse comando apaga o que já estiver nesse banco e grava os dados de demonstração. Pode rodar com o servidor parado. Se ele já estiver no ar, atualize a página depois.
-
-Aí vale olhar nesta ordem:
-
-1. **Painel**, para ver os totais e a comissão.
-2. **Pedidos**, usando **De** e **Até** para filtrar o período, e **Ver itens** para abrir um pedido.
-3. **Empresas**. O CNPJ se formata sozinho, e um CNPJ que já existe é recusado.
-4. **Vendedores**. CPF e celular passam pela validação, e a mesma região não aceita dois responsáveis.
-5. **Produtos** e um **Novo pedido**. O preço que entrar ali fica preso naquele pedido.
-6. **Regiões** e **Endereços**. Dá para criar, editar e excluir. Se o registro ainda estiver em uso, a exclusão é barrada.
-
-Se preferir montar tudo na mão, comece por endereço, depois região, vendedor, empresa e produto. O pedido só faz sentido quando esses cadastros já existem.
-
-Para checar se a API está de pé:
-
-```bash
-curl http://localhost:3000/api/health
-```
-
-A resposta é `{"ok":true}`.
-
-## Comandos
-
-| Comando | O que faz |
+| Arquivo | Papel |
 | --- | --- |
-| `npm start` | Sobe o servidor na porta do `.env` (3000, se você não mudar) |
-| `npm run seed` | Troca os dados do banco local pelo conjunto de demonstração |
+| `server.js` | Rotas, regras de negócio e respostas da API |
+| `models.js` | Coleções, índices únicos e validação no banco |
+| `lib/acesso.js` | Senha, sessão, limite de tentativas e cabeçalhos |
+| `lib/documento.js` | CPF, CNPJ e celular |
+| `frontend.html` | Painel, login e atualização da lista |
+| `config.js` | Leitura das variáveis de ambiente |
+| `vercel.json` | Cabeçalhos HTTP da publicação |
 
-## Na Vercel
+## O que um leitor encontra na segurança
 
-O site no ar: [https://central-de-ar.vercel.app](https://central-de-ar.vercel.app).
+A senha só é conferida no servidor, com scrypt e comparação de tempo constante. A sessão vai em cookie `HttpOnly`, `Secure` e `SameSite=Strict`. Listar, filtrar, criar, editar e apagar exigem essa sessão. O preço do pedido não é aceito do navegador: vem do catálogo.
 
-O painel não abre sem senha. Essa senha não está no código. Na Vercel, o projeto usa só estas variáveis, marcadas como sensíveis:
+Datas entram no filtro só no formato `AAAA-MM-DD`. Identificadores passam por validação antes de irem ao banco. Textos gravados são escapados antes de irem para o HTML. O login aceita 8 tentativas a cada 15 minutos por IP.
 
-- `MONGO_URI`
-- `APP_PASSWORD`
-- `SESSION_SECRET`
-
-O arquivo `.env` não entra no Git. O banco precisa aceitar conexão vinda da Vercel. No Atlas, isso fica em Network Access. Se a senha do banco já tiver aparecido em algum arquivo antigo, troque essa senha no banco e atualize a variável na Vercel.
+`MONGO_URI`, `APP_PASSWORD` e `SESSION_SECRET` ficam no ambiente da Vercel. O `.env` está no `.gitignore`. Mensagens de erro no log não imprimem a URI do banco.
